@@ -84,3 +84,22 @@ message ProtoMessage {
   uint32 pointer = 3;
   uint32 refund_pointer = 4;
 }
+
+message AddressReceivedAmount {
+  bytes senderAddress = 1;
+  bytes amount = 2;
+}
+
+message AddressReceivedReceipt {
+  RuneId runeId = 1;
+  repeated AddressReceivedAmount amounts = 2;
+}
+
+message AddressReceivedRunesRequest {
+  uint32 height = 1;
+  bytes address = 2;
+}
+
+message AddressReceivedRunesResponse {
+  repeated AddressReceivedReceipt receipts = 1;
+}

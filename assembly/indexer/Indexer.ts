@@ -9,15 +9,19 @@ import {
   OUTPOINT_TO_HEIGHT,
   HEIGHT_TO_BLOCKHASH,
   BLOCKHASH_TO_HEIGHT,
+  HEIGHT_TO_RECEIVED_BTC,
+  HEIGHT_TO_RECEIVED_RUNE,
   GENESIS,
 } from "./constants";
-import { OutPoint } from "metashrew-as/assembly/blockdata/transaction";
+import { Input, OutPoint } from "metashrew-as/assembly/blockdata/transaction";
 import {
   isEqualArrayBuffer,
   fieldToArrayBuffer,
   stripNullRight,
 } from "../utils";
 import { encodeHexFromBuffer } from "metashrew-as/assembly/utils";
+import { metashrew_runes as protobuf } from "../proto/metashrew-runes";
+import { OUTPOINT_SPENDABLE_BY } from "metashrew-spendables/assembly/tables";
 
 export class Index {
   static indexOutpoints(
@@ -79,12 +83,31 @@ export class Index {
     else console.log("commitment found");
    */
   }
+
+  static getSenderAddress(tx: RunesTransaction): ArrayBuffer {
+    // find sender addr
+    for (let in_idx = 0; in_idx < tx.ins.length; in_idx++) {
+      const input: Input = tx.ins[in_idx];
+      const addr = OUTPOINT_SPENDABLE_BY.select(
+        input.previousOutput().toArrayBuffer(),
+      ).get();
+      // send_addr = the first tx inputs sender with valid addr
+      if (addr.byteLength != 0) {
+        return addr;
+      }
+    }
+    return new ArrayBuffer(0);
+    // TODO: assert(senderAddr.byteLength != 0,"Unable to find sender address in tx");
+  }
+
   static processRunesTransaction(
     tx: RunesTransaction,
     txid: ArrayBuffer,
     height: u32,
     i: u32,
   ): void {
+    const senderAddr = this.getSenderAddress(tx);
+
     tx.processRunestones();
     if (height >= GENESIS && tx.tags.runestone !== -1) {
       const runestoneOutputIndex = tx.tags.runestone;
@@ -101,8 +124,24 @@ export class Index {
       if (changetype<usize>(message) === 0) return;
 
       //process message here
-      message.process(tx, txid, height, i);
+      message.process(tx, txid, height, i, senderAddr);
+
+      const recvAddresses = message.receiptItems.keys();
+      for (
+        let map_idx: i32 = 0;
+        map_idx < message.receiptItems.size;
+        map_idx++
+      ) {
+        const recvAddr = recvAddresses[map_idx];
+        const receiptItemProto = message.receiptItems.get(recvAddr);
+
+        HEIGHT_TO_RECEIVED_RUNE.selectValue<u32>(height)
+          .select(String.UTF8.encode(recvAddr))
+          .append(receiptItemProto.encode());
+      }
     }
+
+
   }
   static indexBlock(height: u32, _block: Block): void {
     if (height == GENESIS) {
