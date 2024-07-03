@@ -41,24 +41,30 @@ import {
   TWENTY_SIX,
   RESERVED_NAME,
   PROTOCOLS_TO_INDEX,
+  HEIGHT_TO_RECEIVED_RUNE,
+  HEIGHT_TO_RECEIVED_BTC,
 } from "./constants";
 import { BalanceSheet } from "./BalanceSheet";
 import { RunesTransaction } from "./RunesTransaction";
-import { Input, OutPoint } from "metashrew-as/assembly/blockdata/transaction";
+import { Input, OutPoint, Output } from "metashrew-as/assembly/blockdata/transaction";
 import {
   encodeHexFromBuffer,
   SUBSIDY_HALVING_INTERVAL,
 } from "metashrew-as/assembly/utils";
 import { console } from "metashrew-as/assembly/utils/logging";
 import { ProtoBurn } from "./ProtoBurn";
+import { protorune as protobuf } from "../proto/protorune";
+import { OUTPOINT_TO_OUTPUT } from "metashrew-spendables/assembly/tables";
 
 export class RunestoneMessage {
   public fields: Map<u64, Array<u128>>;
   public edicts: Array<StaticArray<u128>>;
+  public receiptItems: Map<string, protobuf.AddressReceivedReceipt>;
   protoBurns: Map<u32, Array<ProtoBurn>>;
   constructor(fields: Map<u64, Array<u128>>, edicts: Array<StaticArray<u128>>) {
     this.fields = fields;
     this.edicts = edicts;
+    this.receiptItems = new Map<string, protobuf.AddressReceivedReceipt>();
     this.protoBurns = new Map<u32, Array<ProtoBurn>>();
   }
   inspect(): string {
@@ -260,10 +266,47 @@ export class RunestoneMessage {
     return true;
   }
 
+  saveReceivedRuneToReceipts(
+    txid: ArrayBuffer,
+    runeId: RuneId,
+    edictOutput: u32,
+    amount: u128,
+    senderAddr: ArrayBuffer,
+  ): void {
+    // get the address this rune is going to
+    const recvAddr = this._getAddressFromOutpoint(OutPoint.from(txid, edictOutput));
+    if (recvAddr === null) {
+      console.log("ERROR: unable to get the receiver of the rune")
+    } else {
+      const recvAddrStr = String.UTF8.decode(recvAddr);
+      let receiptItemProto: protobuf.AddressReceivedReceipt;
+      if (this.receiptItems.has(recvAddrStr)) {
+        receiptItemProto = this.receiptItems.get(recvAddrStr);
+      } else {
+        receiptItemProto = new protobuf.AddressReceivedReceipt();
+        const runeIdProto = new protobuf.RuneId();
+        runeIdProto.height = <u32>runeId.block; // copied from outpoint.ts, is this safe?
+        runeIdProto.txindex = runeId.tx;
+
+        receiptItemProto.runeId = runeIdProto;
+        this.receiptItems.set(recvAddrStr, receiptItemProto);
+      }
+
+      const amountProto = new protobuf.AddressReceivedAmount();
+      amountProto.senderAddress = String.UTF8.decode(senderAddr)
+
+      amountProto.amount = changetype<Array<u8>>(amount.toBytes(true));
+
+      receiptItemProto.amounts.push(amountProto);
+    }
+
+  }
+
   processEdicts(
     balancesByOutput: Map<u32, BalanceSheet>,
     balanceSheet: BalanceSheet,
     txid: ArrayBuffer,
+    tx: RunesTransaction,
   ): bool {
     let isCenotaph: bool = false;
     const edicts = Edict.fromDeltaSeries(this.edicts);
@@ -271,7 +314,8 @@ export class RunestoneMessage {
       const edict = edicts[e];
       const edictOutput = toPrimitive<u32>(edict.output);
 
-      const runeId = edict.runeId().toBytes();
+      const runeId = edict.runeId();
+      const runeIdBytes = runeId.toBytes();
       let outputBalanceSheet = changetype<BalanceSheet>(0);
       if (!balancesByOutput.has(edictOutput)) {
         balancesByOutput.set(
@@ -279,11 +323,11 @@ export class RunestoneMessage {
           (outputBalanceSheet = new BalanceSheet()),
         );
       } else outputBalanceSheet = balancesByOutput.get(edictOutput);
-      const amount = min(edict.amount, balanceSheet.get(runeId));
+      const amount = min(edict.amount, balanceSheet.get(runeIdBytes));
 
-      const canDecrease = balanceSheet.decrease(runeId, amount);
+      const canDecrease = balanceSheet.decrease(runeIdBytes, amount);
       if (!canDecrease) isCenotaph = true;
-      outputBalanceSheet.increase(runeId, amount);
+      outputBalanceSheet.increase(runeIdBytes, amount);
       if (this.protoBurns.has(edictOutput)) {
         const ary = this.protoBurns.get(edictOutput);
         for (let i = 0; i < ary.length; i++) {
@@ -294,9 +338,43 @@ export class RunestoneMessage {
           );
         }
       }
+
+      const senderAddr = this.getSenderAddress(tx);
+      if (senderAddr === null) {
+        isCenotaph = true;
+      } else {
+        this.saveReceivedRuneToReceipts(
+          txid,
+          runeId,
+          edictOutput,
+          amount,
+          senderAddr,
+        );
+      }
     }
     return isCenotaph;
   }
+
+  _getAddressFromOutpoint(outpoint: OutPoint): ArrayBuffer | null {
+    const outputBuf = OUTPOINT_TO_OUTPUT.select(
+      outpoint.toArrayBuffer(),
+    ).get();
+    const output = new Output(Box.from(outputBuf));
+    return output.intoAddress();
+  }
+
+  getSenderAddress(tx: RunesTransaction): ArrayBuffer | null {
+    // find sender addr
+    for (let in_idx = 0; in_idx < tx.ins.length; in_idx++) {
+      const input: Input = tx.ins[in_idx];
+      const address = this._getAddressFromOutpoint(input.previousOutput());
+      if (address !== null) {
+        return address;
+      }
+    }
+    return null;
+  }
+
   process(
     tx: RunesTransaction,
     txid: ArrayBuffer,
@@ -339,7 +417,12 @@ export class RunestoneMessage {
       balancesByOutput.set(unallocatedTo, balanceSheet);
     }
 
-    const isCenotaph = this.processEdicts(balancesByOutput, balanceSheet, txid);
+    const isCenotaph = this.processEdicts(
+      balancesByOutput,
+      balanceSheet,
+      txid,
+      tx,
+    );
 
     const runesToOutputs = balancesByOutput.keys();
 

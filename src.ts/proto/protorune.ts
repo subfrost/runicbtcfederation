@@ -234,6 +234,54 @@ export interface ProtoMessage {
    */
   refundPointer: number;
 }
+/**
+ * @generated from protobuf message protorune.AddressReceivedAmount
+ */
+export interface AddressReceivedAmount {
+    /**
+     * @generated from protobuf field: string senderAddress = 1;
+     */
+    senderAddress: string;
+    /**
+     * @generated from protobuf field: bytes amount = 2;
+     */
+    amount: Uint8Array;
+}
+/**
+ * @generated from protobuf message protorune.AddressReceivedReceipt
+ */
+export interface AddressReceivedReceipt {
+    /**
+     * @generated from protobuf field: protorune.RuneId runeId = 1;
+     */
+    runeId?: RuneId;
+    /**
+     * @generated from protobuf field: repeated protorune.AddressReceivedAmount amounts = 2;
+     */
+    amounts: AddressReceivedAmount[];
+}
+/**
+ * @generated from protobuf message protorune.AddressReceivedRunesRequest
+ */
+export interface AddressReceivedRunesRequest {
+    /**
+     * @generated from protobuf field: uint32 height = 1;
+     */
+    height: number;
+    /**
+     * @generated from protobuf field: bytes address = 2;
+     */
+    address: Uint8Array;
+}
+/**
+ * @generated from protobuf message protorune.AddressReceivedRunesResponse
+ */
+export interface AddressReceivedRunesResponse {
+    /**
+     * @generated from protobuf field: repeated protorune.AddressReceivedReceipt receipts = 1;
+     */
+    receipts: AddressReceivedReceipt[];
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class RuneId$Type extends MessageType<RuneId> {
   constructor() {
@@ -1656,3 +1704,214 @@ class ProtoMessage$Type extends MessageType<ProtoMessage> {
  * @generated MessageType for protobuf message protorune.ProtoMessage
  */
 export const ProtoMessage = new ProtoMessage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AddressReceivedAmount$Type extends MessageType<AddressReceivedAmount> {
+    constructor() {
+        super("protorune.AddressReceivedAmount", [
+            { no: 1, name: "senderAddress", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "amount", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AddressReceivedAmount>): AddressReceivedAmount {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.senderAddress = "";
+        message.amount = new Uint8Array(0);
+        if (value !== undefined)
+            reflectionMergePartial<AddressReceivedAmount>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AddressReceivedAmount): AddressReceivedAmount {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string senderAddress */ 1:
+                    message.senderAddress = reader.string();
+                    break;
+                case /* bytes amount */ 2:
+                    message.amount = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AddressReceivedAmount, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string senderAddress = 1; */
+        if (message.senderAddress !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.senderAddress);
+        /* bytes amount = 2; */
+        if (message.amount.length)
+            writer.tag(2, WireType.LengthDelimited).bytes(message.amount);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message protorune.AddressReceivedAmount
+ */
+export const AddressReceivedAmount = new AddressReceivedAmount$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AddressReceivedReceipt$Type extends MessageType<AddressReceivedReceipt> {
+    constructor() {
+        super("protorune.AddressReceivedReceipt", [
+            { no: 1, name: "runeId", kind: "message", T: () => RuneId },
+            { no: 2, name: "amounts", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AddressReceivedAmount }
+        ]);
+    }
+    create(value?: PartialMessage<AddressReceivedReceipt>): AddressReceivedReceipt {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.amounts = [];
+        if (value !== undefined)
+            reflectionMergePartial<AddressReceivedReceipt>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AddressReceivedReceipt): AddressReceivedReceipt {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* protorune.RuneId runeId */ 1:
+                    message.runeId = RuneId.internalBinaryRead(reader, reader.uint32(), options, message.runeId);
+                    break;
+                case /* repeated protorune.AddressReceivedAmount amounts */ 2:
+                    message.amounts.push(AddressReceivedAmount.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AddressReceivedReceipt, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* protorune.RuneId runeId = 1; */
+        if (message.runeId)
+            RuneId.internalBinaryWrite(message.runeId, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* repeated protorune.AddressReceivedAmount amounts = 2; */
+        for (let i = 0; i < message.amounts.length; i++)
+            AddressReceivedAmount.internalBinaryWrite(message.amounts[i], writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message protorune.AddressReceivedReceipt
+ */
+export const AddressReceivedReceipt = new AddressReceivedReceipt$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AddressReceivedRunesRequest$Type extends MessageType<AddressReceivedRunesRequest> {
+    constructor() {
+        super("protorune.AddressReceivedRunesRequest", [
+            { no: 1, name: "height", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "address", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<AddressReceivedRunesRequest>): AddressReceivedRunesRequest {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.height = 0;
+        message.address = new Uint8Array(0);
+        if (value !== undefined)
+            reflectionMergePartial<AddressReceivedRunesRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AddressReceivedRunesRequest): AddressReceivedRunesRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 height */ 1:
+                    message.height = reader.uint32();
+                    break;
+                case /* bytes address */ 2:
+                    message.address = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AddressReceivedRunesRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 height = 1; */
+        if (message.height !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.height);
+        /* bytes address = 2; */
+        if (message.address.length)
+            writer.tag(2, WireType.LengthDelimited).bytes(message.address);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message protorune.AddressReceivedRunesRequest
+ */
+export const AddressReceivedRunesRequest = new AddressReceivedRunesRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AddressReceivedRunesResponse$Type extends MessageType<AddressReceivedRunesResponse> {
+    constructor() {
+        super("protorune.AddressReceivedRunesResponse", [
+            { no: 1, name: "receipts", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => AddressReceivedReceipt }
+        ]);
+    }
+    create(value?: PartialMessage<AddressReceivedRunesResponse>): AddressReceivedRunesResponse {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.receipts = [];
+        if (value !== undefined)
+            reflectionMergePartial<AddressReceivedRunesResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AddressReceivedRunesResponse): AddressReceivedRunesResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated protorune.AddressReceivedReceipt receipts */ 1:
+                    message.receipts.push(AddressReceivedReceipt.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: AddressReceivedRunesResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated protorune.AddressReceivedReceipt receipts = 1; */
+        for (let i = 0; i < message.receipts.length; i++)
+            AddressReceivedReceipt.internalBinaryWrite(message.receipts[i], writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message protorune.AddressReceivedRunesResponse
+ */
+export const AddressReceivedRunesResponse = new AddressReceivedRunesResponse$Type();

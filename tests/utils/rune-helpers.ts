@@ -9,11 +9,17 @@ import {
   buildTransaction,
 } from "./block-helpers";
 import { EMPTY_BUFFER, EMPTY_WITNESS, TEST_BTC_ADDRESS1 } from "./general";
+import { AddressReceivedRunesResponse } from "../../lib/proto/protorune";
+import { OutPoint, RuneOutput } from "../../lib/outpoint";
+import { Receipt } from "../../lib/admin";
 
 export const runesbyaddress = async (
   program: IndexerProgram,
   address: string,
-): Promise<any> => {
+): Promise<{
+    outpoints: OutPoint[];
+    balanceSheet: RuneOutput[];
+  }> => {
   const cloned = program; // just mutate it
   const result = await MetashrewRunes.prototype.runesbyaddress.call(
     {
@@ -24,6 +30,25 @@ export const runesbyaddress = async (
       },
     },
     { address },
+  );
+  return result;
+};
+
+export const getAllRuneDeposits = async (
+  program: IndexerProgram,
+  height: number,
+  address: string,
+): Promise<Receipt[]> => {
+  const cloned = program; // just mutate it
+  const result = await MetashrewRunes.prototype.getAllRuneDeposits.call(
+    {
+      async _call({ input }) {
+        cloned.setBlock(input);
+        const ptr = await cloned.run("getAllRuneDeposits");
+        return readArrayBufferAsHex(cloned.memory, ptr);
+      },
+    },
+    { height, address },
   );
   return result;
 };

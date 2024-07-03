@@ -17,6 +17,7 @@
     "test": "ts-mocha --timeout 0 --reporter spec ./tests/**.spec.ts",
     "test:view": "ts-mocha --timeout 0 --reporter spec ./tests/view.spec.ts",
     "test:release": "ts-mocha --timeout 0 --reporter spec ./tests/release.spec.ts",
+    "test:bonds": "ts-mocha --timeout 0 --reporter spec ./tests/bonds.spec.ts",
     "clean": "rm -rf build lib assembly/proto/protorune.ts src.ts/proto/protorune.ts",
     "postinstall": "yarn build"
   },

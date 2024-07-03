@@ -1,3 +1,4 @@
+import * as admin from "./admin";
 import { OutPoint, RuneOutput } from "./outpoint";
 export declare class MetashrewRunes {
     baseUrl: string;
@@ -7,8 +8,9 @@ export declare class MetashrewRunes {
         method: any;
         input: any;
     }): Promise<string>;
-    runesbyaddress({ address: string }: any): Promise<{
+    runesbyaddress({ address }: any): Promise<{
         outpoints: OutPoint[];
         balanceSheet: RuneOutput[];
     }>;
+    getAllRuneDeposits({ height, address, }: any): Promise<admin.Receipt[]>;
 }

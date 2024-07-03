@@ -12,6 +12,7 @@ export class ProtoruneMessage extends RunestoneMessage {
     balancesByOutput: Map<u32, BalanceSheet>,
     balanceSheet: BalanceSheet,
     _txid: ArrayBuffer,
+    _tx: RunesTransaction,
   ): bool {
     const edicts = Edict.fromDeltaSeries(this.edicts);
     let isCenotaph: bool = false;
@@ -49,7 +50,7 @@ export class ProtoruneMessage extends RunestoneMessage {
     );
     const balancesByOutput = new Map<u32, BalanceSheet>();
 
-    this.processEdicts(balancesByOutput, balanceSheet, txid);
+    this.processEdicts(balancesByOutput, balanceSheet, txid, tx);
 
     const runesToOutputs = balancesByOutput.keys();
 

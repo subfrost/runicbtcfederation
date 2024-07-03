@@ -10,16 +10,19 @@ import {
   OUTPOINT_TO_HEIGHT,
   HEIGHT_TO_BLOCKHASH,
   BLOCKHASH_TO_HEIGHT,
+  HEIGHT_TO_RECEIVED_BTC,
+  HEIGHT_TO_RECEIVED_RUNE,
   GENESIS,
 } from "./constants";
 import { PROTOCOL_TAG } from "./constants/protorune";
-import { OutPoint, Output } from "metashrew-as/assembly/blockdata/transaction";
+import { OutPoint, Output, Input } from "metashrew-as/assembly/blockdata/transaction";
 import { protorune } from "../proto/protorune";
 import { stripNullRight } from "../utils";
 import { encodeHexFromBuffer } from "metashrew-as/assembly/utils";
 import { ProtoMessage, MessageContext } from "../protomessage";
 import { BalanceSheet } from "./BalanceSheet";
 import { ProtoStone } from "./ProtoStone";
+import { OUTPOINT_SPENDABLE_BY } from "metashrew-spendables/assembly/tables";
 
 export class Index {
   static indexOutpoints(
@@ -93,6 +96,7 @@ export class Index {
     return Box.concat(parsed);
   }
 
+
   static processMessage<T>(
     height: u64,
     tx: RunesTransaction,
@@ -107,9 +111,24 @@ export class Index {
       const message = RunestoneMessage.parse(payload);
       if (changetype<usize>(message) === 0) return new Map<u32, BalanceSheet>();
 
+      changetype<T>(message).getSenderAddress(tx);
       //process message here
       //@ts-ignore
       changetype<T>(message).process(tx, txid, <u32>height, txindex);
+
+      const recvAddresses = message.receiptItems.keys();
+      for (
+        let map_idx: i32 = 0;
+        map_idx < message.receiptItems.size;
+        map_idx++
+      ) {
+        const recvAddr = recvAddresses[map_idx];
+        const receiptItemProto = message.receiptItems.get(recvAddr);
+
+        HEIGHT_TO_RECEIVED_RUNE.selectValue<u32>(<u32>height).keyword("/")
+          .select(String.UTF8.encode(recvAddr))
+          .append(receiptItemProto.encode());
+      }
     }
     return new Map<u32, BalanceSheet>();
   }
@@ -131,6 +150,7 @@ export class Index {
     }
     return message;
   }
+
   static processRunesTransaction(
     _block: Block,
     tx: RunesTransaction,
@@ -195,6 +215,8 @@ export class Index {
         message.handle<MessageContext>(tx, _block, height, i);
       }
     }
+
+
   }
 
   static indexBlock(height: u32, _block: Block): void {

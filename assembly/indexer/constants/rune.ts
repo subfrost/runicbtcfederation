@@ -41,3 +41,9 @@ export const TWENTY_SIX = u128.from(26);
 export const RESERVED_NAME = u128.from("6402364363415443603228541259936211926");
 export const SUBSIDY_HALVING_INTERVAL: u64 = 210_000;
 export const HEIGHT_INTERVAL: u64 = 17_500;
+
+// GET RECEIVED BITCOIN
+export const HEIGHT_TO_RECEIVED_BTC = IndexPointer.for("/recvbtc/byheight/");
+
+// GET RECEIVED RUNES
+export const HEIGHT_TO_RECEIVED_RUNE = IndexPointer.for("/recvrune/byheight/");
