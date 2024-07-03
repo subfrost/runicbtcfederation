@@ -228,6 +228,54 @@ export interface ProtoMessage {
      */
     refundPointer: number;
 }
+/**
+ * @generated from protobuf message metashrew_runes.AddressReceivedAmount
+ */
+export interface AddressReceivedAmount {
+    /**
+     * @generated from protobuf field: bytes senderAddress = 1;
+     */
+    senderAddress: Uint8Array;
+    /**
+     * @generated from protobuf field: bytes amount = 2;
+     */
+    amount: Uint8Array;
+}
+/**
+ * @generated from protobuf message metashrew_runes.AddressReceivedReceipt
+ */
+export interface AddressReceivedReceipt {
+    /**
+     * @generated from protobuf field: metashrew_runes.RuneId runeId = 1;
+     */
+    runeId?: RuneId;
+    /**
+     * @generated from protobuf field: repeated metashrew_runes.AddressReceivedAmount amounts = 2;
+     */
+    amounts: AddressReceivedAmount[];
+}
+/**
+ * @generated from protobuf message metashrew_runes.AddressReceivedRunesRequest
+ */
+export interface AddressReceivedRunesRequest {
+    /**
+     * @generated from protobuf field: uint32 height = 1;
+     */
+    height: number;
+    /**
+     * @generated from protobuf field: bytes address = 2;
+     */
+    address: Uint8Array;
+}
+/**
+ * @generated from protobuf message metashrew_runes.AddressReceivedRunesResponse
+ */
+export interface AddressReceivedRunesResponse {
+    /**
+     * @generated from protobuf field: repeated metashrew_runes.AddressReceivedReceipt receipts = 1;
+     */
+    receipts: AddressReceivedReceipt[];
+}
 declare class RuneId$Type extends MessageType<RuneId> {
     constructor();
     create(value?: PartialMessage<RuneId>): RuneId;
@@ -388,4 +436,44 @@ declare class ProtoMessage$Type extends MessageType<ProtoMessage> {
  * @generated MessageType for protobuf message metashrew_runes.ProtoMessage
  */
 export declare const ProtoMessage: ProtoMessage$Type;
+declare class AddressReceivedAmount$Type extends MessageType<AddressReceivedAmount> {
+    constructor();
+    create(value?: PartialMessage<AddressReceivedAmount>): AddressReceivedAmount;
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AddressReceivedAmount): AddressReceivedAmount;
+    internalBinaryWrite(message: AddressReceivedAmount, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message metashrew_runes.AddressReceivedAmount
+ */
+export declare const AddressReceivedAmount: AddressReceivedAmount$Type;
+declare class AddressReceivedReceipt$Type extends MessageType<AddressReceivedReceipt> {
+    constructor();
+    create(value?: PartialMessage<AddressReceivedReceipt>): AddressReceivedReceipt;
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AddressReceivedReceipt): AddressReceivedReceipt;
+    internalBinaryWrite(message: AddressReceivedReceipt, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message metashrew_runes.AddressReceivedReceipt
+ */
+export declare const AddressReceivedReceipt: AddressReceivedReceipt$Type;
+declare class AddressReceivedRunesRequest$Type extends MessageType<AddressReceivedRunesRequest> {
+    constructor();
+    create(value?: PartialMessage<AddressReceivedRunesRequest>): AddressReceivedRunesRequest;
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AddressReceivedRunesRequest): AddressReceivedRunesRequest;
+    internalBinaryWrite(message: AddressReceivedRunesRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message metashrew_runes.AddressReceivedRunesRequest
+ */
+export declare const AddressReceivedRunesRequest: AddressReceivedRunesRequest$Type;
+declare class AddressReceivedRunesResponse$Type extends MessageType<AddressReceivedRunesResponse> {
+    constructor();
+    create(value?: PartialMessage<AddressReceivedRunesResponse>): AddressReceivedRunesResponse;
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: AddressReceivedRunesResponse): AddressReceivedRunesResponse;
+    internalBinaryWrite(message: AddressReceivedRunesResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message metashrew_runes.AddressReceivedRunesResponse
+ */
+export declare const AddressReceivedRunesResponse: AddressReceivedRunesResponse$Type;
 export {};

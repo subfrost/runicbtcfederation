@@ -1,4 +1,5 @@
 import { OutPoint, RuneOutput } from "./outpoint";
+import { AddressReceivedRunesResponse } from "./proto/metashrew-runes";
 export declare class MetashrewRunes {
     baseUrl: string;
     blockTag: string;
@@ -7,8 +8,9 @@ export declare class MetashrewRunes {
         method: any;
         input: any;
     }): Promise<string>;
-    runesbyaddress({ address: string }: any): Promise<{
+    runesbyaddress({ address }: any): Promise<{
         outpoints: OutPoint[];
         balanceSheet: RuneOutput[];
     }>;
+    getAllRuneDeposits({ height, address, }: any): Promise<AddressReceivedRunesResponse>;
 }
