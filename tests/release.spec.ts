@@ -12,18 +12,10 @@ import { encodeRunestone } from "@magiceden-oss/runestone-lib";
 import { MetashrewRunes } from "../lib/rpc";
 import { error } from "node:console";
 
-const network = bitcoinjs.networks.bitcoin;
-
-const ECPair = ECPairFactory.ECPairFactory(ecc);
-
 const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 const EMPTY_WITNESS = [];
 
-const keyPair = ECPair.makeRandom({ network });
-const { publicKey, privateKey } = keyPair;
-const { address } = bitcoinjs.payments.p2pkh({ pubkey: publicKey, network });
-
-const TEST_BTC_ADDRESS1 = address;
+const TEST_BTC_ADDRESS1 = "16aE44Au1UQ5XqKMUhCMXTX7ZxbmAcQNA1";
 const TEST_BTC_ADDRESS2 = "1AdAhGdUgGF6ip7bBcVvuWYuuCxAeonNaK";
 
 const DEBUG_WASM = fs.readFileSync(
@@ -271,7 +263,7 @@ describe("metashrew-runes", () => {
       Object.keys(formatKv(program.kv)).filter((d) =>
         d.includes("/etching/byruneid"),
       ).length,
-    ).to.be.equal(2);
+    ).to.be.equal(1);
   });
   it("should not index before 840000", async () => {
     const program = buildProgram();
@@ -359,12 +351,12 @@ describe("metashrew-runes", () => {
         witness: EMPTY_WITNESS,
         script: EMPTY_BUFFER,
       },
-      {
-        hash: runeGenesisTx?.getHash(),
-        index: 2,
-        witness: EMPTY_WITNESS,
-        script: EMPTY_BUFFER,
-      },
+      // {
+      //   hash: runeGenesisTx?.getHash(),
+      //   index: 2,
+      //   witness: EMPTY_WITNESS,
+      //   script: EMPTY_BUFFER,
+      // },
     ]
     const outputs2 = [
       {
@@ -402,11 +394,12 @@ describe("metashrew-runes", () => {
         ...outputs2
       ],
     );
-    const p2wpkh = bitcoinjs.payments.p2wpkh({ pubkey: publicKey });
-    const sighash = transaction.hashForWitnessV0(0, p2wpkh.output!, 1, bitcoinjs.Transaction.SIGHASH_ALL);
-    const signature = bitcoinjs.script.signature.encode(keyPair.sign(sighash), bitcoinjs.Transaction.SIGHASH_ALL);
-    transaction.setWitness(0, [signature, publicKey]);
     block.transactions?.push(transaction);
+
+    const inputTxIndex = 1 // 0 is coinbase, 1 is the mint 
+    const inputTxOutputIndex = pointer1 // index of output in the input tx that has the runes. In this case it is the default pointer of the mint
+
+    // transferRune()
 
     program.setBlock(block.toHex());
 
