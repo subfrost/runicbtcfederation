@@ -33,8 +33,12 @@
     "as-bignum": "^0.3.0",
     "assemblyscript": "^0.27.22",
     "assemblyscript-prettier": "^3.0.1",
+    "axios": "^1.7.2",
+    "bip32": "^4.0.0",
+    "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.6",
     "chai": "4",
+    "ecpair": "^2.1.0",
     "fs-extra": "^11.2.0",
     "js-sha3": "^0.9.3",
     "metashrew-as": "https://github.com/sandshrewmetaprotocols/metashrew-as",
@@ -46,13 +50,10 @@
     "prettier": "^3.1.1",
     "protobuf-as": "https://github.com/sandshrewmetaprotocols/protobuf-as",
     "rlp": "^3.0.0",
+    "tiny-secp256k1": "^2.2.3",
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
-    "bip32": "^4.0.0",
-    "bip39": "^3.1.0",
-    "ecpair": "^2.1.0",
-    "tiny-secp256k1": "^2.2.3"
+    "typescript": "^5.3.3"
   },
   "name": "protorune",
   "description": "protorune"

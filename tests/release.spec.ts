@@ -208,18 +208,17 @@ const initCompleteBlockWithRuneEtching = (
   return block;
 }
 
-const buildCompleteBlockWithRuneTransfer = (
-  inputs: any,
-  outputs: any,
-  edicts: {
-    id: {
-      block: bigint;
-      tx: number;
-    };
-    amount: bigint;
-    output: number;
-  }[] | undefined,
-  pointer: number,
+const transferRune = (
+  inputTxIndex: number,
+  inputTxOutputIndex: number,
+  runeId: {
+    block: bigint;
+    tx: number;
+  },
+  runeTransferAmount: bigint,
+  outputIndexToReceiveRunes: number,
+  outputAddress: string,
+  outputBtcAmount: number = 1,
   block?: bitcoinjs.Block
 ): bitcoinjs.Block => {
   if (block == undefined) {
@@ -227,9 +226,35 @@ const buildCompleteBlockWithRuneTransfer = (
     const coinbase = buildCoinbaseToAddress(TEST_BTC_ADDRESS1);
     block.transactions?.push(coinbase);
   }
+  const inputRuneTx = block.transactions?.at(inputTxIndex)
+
+  const inputs = [
+    {
+      hash: inputRuneTx?.getHash(),
+      index: inputTxOutputIndex,
+      witness: EMPTY_WITNESS,
+      script: EMPTY_BUFFER,
+    },
+  ]
+  const outputs = [
+    {
+      script: bitcoinjs.payments.p2pkh({
+        address: outputAddress,
+        network: bitcoinjs.networks.bitcoin,
+      }).output,
+      value: outputBtcAmount,
+    },
+  ]
+  const edicts = [
+    {
+      id: runeId,
+      amount: runeTransferAmount,
+      output: outputIndexToReceiveRunes
+    }
+  ]
   const runesTransfer = encodeRunestone({
     edicts: edicts,
-    pointer: pointer,
+    pointer: 1,
   }).encodedRunestone;
   const transaction = buildTransaction(
     [
@@ -243,9 +268,6 @@ const buildCompleteBlockWithRuneTransfer = (
       ...outputs
     ],
   );
-
-  const sighash = transaction.hashForWitnessV0(0, p2wpkh.output!, previousOutputValue, bitcoin.Transaction.SIGHASH_ALL);
-  const signature = bitcoinjs.script.signature.encode(keyPair.sign(sighash), bitcoinjs.Transaction.SIGHASH_ALL);
   block.transactions?.push(transaction);
   return block;
 }
@@ -325,81 +347,36 @@ describe("metashrew-runes", () => {
     const program = buildProgram();
     program.setBlockHeight(840000);
     const premineAmount = 2100000005000000n
-    const outputWithRune = {
+    const outputs = [{
       script: bitcoinjs.payments.p2pkh({
         address: TEST_BTC_ADDRESS1,
         network: bitcoinjs.networks.bitcoin,
       }).output,
       value: 1,
-    }
-    const outputWithoutRune = {
+    },
+    {
       script: bitcoinjs.payments.p2pkh({
         network: bitcoinjs.networks.bitcoin,
-        address: TEST_BTC_ADDRESS1,
+        address: TEST_BTC_ADDRESS2,
       }).output,
       value: 624999999,
-    }
-    const outputs = [outputWithRune, outputWithoutRune]
+    }]
     const pointer1 = 1
-    const block = initCompleteBlockWithRuneEtching(outputs, pointer1, undefined, premineAmount)
-    const runeGenesisTx = block.transactions?.at(1)
+    let block = initCompleteBlockWithRuneEtching(outputs, pointer1, undefined, premineAmount)
 
-    const inputs = [
-      {
-        hash: runeGenesisTx?.getHash(),
-        index: pointer1,
-        witness: EMPTY_WITNESS,
-        script: EMPTY_BUFFER,
-      },
-      // {
-      //   hash: runeGenesisTx?.getHash(),
-      //   index: 2,
-      //   witness: EMPTY_WITNESS,
-      //   script: EMPTY_BUFFER,
-      // },
-    ]
-    const outputs2 = [
-      {
-        script: bitcoinjs.payments.p2pkh({
-          address: TEST_BTC_ADDRESS2,
-          network: bitcoinjs.networks.bitcoin,
-        }).output,
-        value: 1,
-      },
-    ]
-    const edicts = [
-      {
-        id: {
-          block: 840000n,
-          tx: 1
-        },
-        amount: premineAmount,
-        output: 1
-      }
-    ]
-    // const newBlock = buildCompleteBlockWithRuneTransfer(inputs, outputs2, edicts, 1)
-    const runesTransfer = encodeRunestone({
-      edicts: edicts,
-      pointer: 1,
-    }).encodedRunestone;
-    const transaction = buildTransaction(
-      [
-        ...inputs,
-      ],
-      [
-        {
-          script: runesTransfer,
-          value: 0,
-        },
-        ...outputs2
-      ],
-    );
-    block.transactions?.push(transaction);
 
     const inputTxIndex = 1 // 0 is coinbase, 1 is the mint 
     const inputTxOutputIndex = pointer1 // index of output in the input tx that has the runes. In this case it is the default pointer of the mint
+    const runeId = {
+      block: 840000n,
+      tx: 1
+    }
+    const amount = premineAmount
+    const outputIndexToReceiveRunes = 1 // 0 is the script
+    const outputAddress = TEST_BTC_ADDRESS2
+    const outputBtcAmount = 1 //this can be implied to be 1 since runes usually are just inscribed on a satoshi
 
-    // transferRune()
+    block = transferRune(inputTxIndex, inputTxOutputIndex, runeId, amount, outputIndexToReceiveRunes, outputAddress, outputBtcAmount, block)
 
     program.setBlock(block.toHex());
 
