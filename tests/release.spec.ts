@@ -316,10 +316,10 @@ describe("metashrew-runes", () => {
     await program.run("_start");
 
     const resultAddress1 = await runesbyaddress(program, TEST_BTC_ADDRESS1);
-    expect(resultAddress1.balanceSheet.length == 0);
+    expect(resultAddress1.balanceSheet.length).equals(0);
 
     const resultAddress2 = await runesbyaddress(program, TEST_BTC_ADDRESS2);
-    expect(resultAddress2.balanceSheet.length == 0);
+    expect(resultAddress2.balanceSheet.length).equals(0);
   });
   it("index Runestone on etching and premine", async () => {
     const program = buildProgram();
@@ -344,12 +344,12 @@ describe("metashrew-runes", () => {
     await program.run("_start");
 
     const resultAddress1 = await runesbyaddress(program, TEST_BTC_ADDRESS1);
-    expect(resultAddress1.balanceSheet[0].balance == premineAmount);
+    expect(resultAddress1.balanceSheet[0].balance).equals(premineAmount, "address 1 should be mined premine amount");
 
     const resultAddress2 = await runesbyaddress(program, TEST_BTC_ADDRESS2);
-    expect(resultAddress2.balanceSheet.length == 0);
+    expect(resultAddress2.balanceSheet.length).equals(0, "address 2 should not have anything");
   });
-  it("index Runestone on transfer", async () => {
+  it("index Runestone on transfer and refund", async () => {
     const program = buildProgram();
     program.setBlockHeight(840000);
     const premineAmount = 2100000005000000n
@@ -401,9 +401,65 @@ describe("metashrew-runes", () => {
 
     const resultAddress1 = await runesbyaddress(program, TEST_BTC_ADDRESS1);
     console.log(resultAddress1.balanceSheet)
-    expect(resultAddress1.balanceSheet[0].balance === remainingAmount);
+    expect(resultAddress1.balanceSheet[0].balance).equals(remainingAmount, "amount refund to address 1 is incorrect");
     const resultAddress2 = await runesbyaddress(program, TEST_BTC_ADDRESS2);
     console.log(resultAddress2.balanceSheet)
-    expect(resultAddress2.balanceSheet[0].balance === amount);
+    expect(resultAddress2.balanceSheet[0].balance).equals(amount, "amount to address 2 is incorrect");
+  });
+  it("index Runestone on transfer and refund to self", async () => {
+    const program = buildProgram();
+    program.setBlockHeight(840000);
+    const premineAmount = 2100000005000000n
+    const outputs = [{
+      script: bitcoinjs.payments.p2pkh({
+        address: TEST_BTC_ADDRESS1,
+        network: bitcoinjs.networks.bitcoin,
+      }).output,
+      value: 1,
+    },
+    {
+      script: bitcoinjs.payments.p2pkh({
+        network: bitcoinjs.networks.bitcoin,
+        address: TEST_BTC_ADDRESS2,
+      }).output,
+      value: 624999999,
+    }]
+    const pointer1 = 1
+    let block = initCompleteBlockWithRuneEtching(outputs, pointer1, undefined, premineAmount)
+
+
+    const input = {
+      inputTxIndex: 1, // 0 is coinbase, 1 is the mint 
+      inputTxOutputIndex: pointer1, // index of output in the input tx that has the runes. In this case it is the default pointer of the mint
+    }
+    const runeId = {
+      block: 840000n,
+      tx: 1
+    }
+    const amount = premineAmount / 2n
+    const outputIndexToReceiveRunes = 1 // 0 is the script
+    const output = {
+      address: TEST_BTC_ADDRESS2,
+      btcAmount: 1, //this can be implied to be 1 since runes usually are just inscribed on a satoshi
+    }
+    const refundOutput = {
+      address: TEST_BTC_ADDRESS1,
+      btcAmount: 1, //this can be implied to be 1 since runes usually are just inscribed on a satoshi
+    }
+    const outputRunePointer = 1 // leftover amount should go to output 1, so output 1 should have ALL premine runes
+
+    block = transferRune([input], runeId, amount, outputIndexToReceiveRunes, [output, refundOutput], outputRunePointer, block)
+
+    program.setBlock(block.toHex());
+
+    await program.run("_start");
+
+
+    const resultAddress1 = await runesbyaddress(program, TEST_BTC_ADDRESS1);
+    console.log(resultAddress1.balanceSheet)
+    expect(resultAddress1.balanceSheet.length).equals(0, "address 1 should not have any runes left");
+    const resultAddress2 = await runesbyaddress(program, TEST_BTC_ADDRESS2);
+    console.log(resultAddress2.balanceSheet)
+    expect(resultAddress2.balanceSheet[0].balance).equals(premineAmount, "amount to address 2 should be entire premineAmount");
   });
 });

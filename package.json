@@ -14,9 +14,9 @@
     "prettier:assemblyscript": "prettier --write ./assembly/**/*.ts",
     "prettier:ts": "prettier --write ./src.ts/**/*.ts ./tests/*.ts",
     "prettier": "npm-run-all prettier:assemblyscript",
-    "test": "ts-mocha --timeout 0 ./tests/**.spec.ts",
-    "test:view": "ts-mocha --timeout 0 ./tests/view.spec.ts",
-    "test:release": "ts-mocha --timeout 0 ./tests/release.spec.ts",
+    "test": "ts-mocha --timeout 0 --reporter spec ./tests/**.spec.ts",
+    "test:view": "ts-mocha --timeout 0 --reporter spec ./tests/view.spec.ts",
+    "test:release": "ts-mocha --timeout 0 --reporter spec ./tests/release.spec.ts",
     "clean": "rm -rf build lib assembly/proto/protorune.ts src.ts/proto/protorune.ts",
     "postinstall": "yarn build"
   },
