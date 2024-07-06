@@ -385,6 +385,7 @@ describe("metashrew-runes", () => {
       address: TEST_BTC_ADDRESS2,
       btcAmount: 1, //this can be implied to be 1 since runes usually are just inscribed on a satoshi
     }
+    // technically this is not a valid transaction since btc in and less than btc out but this is just to test the runes
     const refundOutput = {
       address: TEST_BTC_ADDRESS1,
       btcAmount: 1, //this can be implied to be 1 since runes usually are just inscribed on a satoshi
@@ -461,5 +462,57 @@ describe("metashrew-runes", () => {
     const resultAddress2 = await runesbyaddress(program, TEST_BTC_ADDRESS2);
     console.log(resultAddress2.balanceSheet)
     expect(resultAddress2.balanceSheet[0].balance).equals(premineAmount, "amount to address 2 should be entire premineAmount");
+  });
+  it("index Runestone on burn", async () => {
+    const program = buildProgram();
+    program.setBlockHeight(840000);
+    const premineAmount = 2100000005000000n
+    const outputs = [{
+      script: bitcoinjs.payments.p2pkh({
+        address: TEST_BTC_ADDRESS1,
+        network: bitcoinjs.networks.bitcoin,
+      }).output,
+      value: 1,
+    },
+    {
+      script: bitcoinjs.payments.p2pkh({
+        network: bitcoinjs.networks.bitcoin,
+        address: TEST_BTC_ADDRESS2,
+      }).output,
+      value: 624999999,
+    }]
+    const pointer1 = 1
+    let block = initCompleteBlockWithRuneEtching(outputs, pointer1, undefined, premineAmount)
+
+
+    const input = {
+      inputTxIndex: 1, // 0 is coinbase, 1 is the mint 
+      inputTxOutputIndex: pointer1, // index of output in the input tx that has the runes. In this case it is the default pointer of the mint
+    }
+    const runeId = {
+      block: 840000n,
+      tx: 1
+    }
+    const amount = premineAmount
+    const outputIndexToReceiveRunes = 0 // 0 is the script
+    const output = {
+      address: TEST_BTC_ADDRESS2,
+      btcAmount: 1, //this can be implied to be 1 since runes usually are just inscribed on a satoshi
+    }
+    const outputRunePointer = 0 // leftover amount should go to output 0, the script, which means it will be burned
+
+    block = transferRune([input], runeId, amount, outputIndexToReceiveRunes, [output], outputRunePointer, block)
+
+    program.setBlock(block.toHex());
+
+    await program.run("_start");
+
+
+    const resultAddress1 = await runesbyaddress(program, TEST_BTC_ADDRESS1);
+    console.log(resultAddress1.balanceSheet)
+    expect(resultAddress1.balanceSheet.length).equals(0, "address 1 should not have any runes left");
+    const resultAddress2 = await runesbyaddress(program, TEST_BTC_ADDRESS2);
+    console.log(resultAddress2.balanceSheet)
+    expect(resultAddress2.balanceSheet.length).equals(0, "address 2 should not have any runes left");
   });
 });
