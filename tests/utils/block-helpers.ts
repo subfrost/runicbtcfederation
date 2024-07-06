@@ -1,9 +1,11 @@
-
 //@ts-ignore
 import bitcoinjs = require("bitcoinjs-lib");
-import { EMPTY_BUFFER, EMPTY_WITNESS, buildBytes32, buildProgram } from "./general";
-
-
+import {
+  EMPTY_BUFFER,
+  EMPTY_WITNESS,
+  buildBytes32,
+  buildProgram,
+} from "./general";
 
 export const buildCoinbase = (outputs) => {
   const tx = new bitcoinjs.Transaction();
@@ -61,4 +63,3 @@ export const runTest = (s) =>
     await new Promise((r) => setTimeout(r, 2000));
     return program;
   });
-

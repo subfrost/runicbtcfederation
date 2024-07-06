@@ -1,10 +1,13 @@
-
 //@ts-ignore
 import bitcoinjs = require("bitcoinjs-lib");
 import { encodeRunestone } from "@magiceden-oss/runestone-lib";
 import { IndexerProgram, readArrayBufferAsHex } from "metashrew-test";
 import { MetashrewRunes } from "../../lib/rpc";
-import { buildCoinbaseToAddress, buildDefaultBlock, buildTransaction } from "./block-helpers";
+import {
+  buildCoinbaseToAddress,
+  buildDefaultBlock,
+  buildTransaction,
+} from "./block-helpers";
 import { EMPTY_BUFFER, EMPTY_WITNESS, TEST_BTC_ADDRESS1 } from "./general";
 
 export const runesbyaddress = async (
@@ -32,15 +35,15 @@ export const initCompleteBlockWithRuneEtching = (
   premineAmount: bigint = 2100000005000000n,
   runeName: string = "GENESIS•RUNE•FR",
   symbol: string = "G",
-  block?: bitcoinjs.Block
+  block?: bitcoinjs.Block,
 ): bitcoinjs.Block => {
   let coinbase;
   if (block == undefined) {
-    block = buildDefaultBlock()
+    block = buildDefaultBlock();
     coinbase = buildCoinbaseToAddress(TEST_BTC_ADDRESS1);
     block.transactions?.push(coinbase);
   } else {
-    coinbase = block.transactions?.at(0)
+    coinbase = block.transactions?.at(0);
   }
   const runesGenesis = encodeRunestone({
     etching: {
@@ -65,17 +68,17 @@ export const initCompleteBlockWithRuneEtching = (
         script: runesGenesis,
         value: 0,
       },
-      ...outputs
+      ...outputs,
     ],
   );
   block.transactions?.push(transaction);
   return block;
-}
+};
 
 export const transferRune = (
   inputs: {
-    inputTxIndex: number,
-    inputTxOutputIndex: number,
+    inputTxIndex: number;
+    inputTxOutputIndex: number;
   }[],
   runeId: {
     block: bigint;
@@ -88,56 +91,53 @@ export const transferRune = (
     btcAmount: number;
   }[],
   outputRunePointer: number = 1, // default output for leftover runes
-  block?: bitcoinjs.Block
+  block?: bitcoinjs.Block,
 ): bitcoinjs.Block => {
   if (block == undefined) {
-    block = buildDefaultBlock()
+    block = buildDefaultBlock();
     const coinbase = buildCoinbaseToAddress(TEST_BTC_ADDRESS1);
     block.transactions?.push(coinbase);
   }
 
-
-  const blockInputs = inputs.map(input => {
-    const inputRuneTx = block?.transactions?.at(input.inputTxIndex)
+  const blockInputs = inputs.map((input) => {
+    const inputRuneTx = block?.transactions?.at(input.inputTxIndex);
     return {
       hash: inputRuneTx?.getHash(),
       index: input.inputTxOutputIndex,
       witness: EMPTY_WITNESS,
       script: EMPTY_BUFFER,
-    }
-  })
-  const blockOutputs = outputs.map(output => {
+    };
+  });
+  const blockOutputs = outputs.map((output) => {
     return {
       script: bitcoinjs.payments.p2pkh({
         address: output.address,
         network: bitcoinjs.networks.bitcoin,
       }).output,
       value: output.btcAmount,
-    }
-  })
+    };
+  });
   const edicts = [
     {
       id: runeId,
       amount: runeTransferAmount,
-      output: outputIndexToReceiveRunes
-    }
-  ]
+      output: outputIndexToReceiveRunes,
+    },
+  ];
   const runesTransfer = encodeRunestone({
     edicts: edicts,
     pointer: outputRunePointer,
   }).encodedRunestone;
   const transaction = buildTransaction(
-    [
-      ...blockInputs,
-    ],
+    [...blockInputs],
     [
       {
         script: runesTransfer,
         value: 0,
       },
-      ...blockOutputs
+      ...blockOutputs,
     ],
   );
   block.transactions?.push(transaction);
   return block;
-}
+};
