@@ -245,7 +245,7 @@ describe("metashrew-runes", () => {
     console.log(resultAddress2.balanceSheet)
     expect(resultAddress2.balanceSheet[0].balance).equals(premineAmount, "amount to address 2 should be entire premineAmount");
   });
-  it("double spend runestone attack", async () => {
+  it("try to send runes from output that doesn't have runes", async () => {
     const program = buildProgram();
     program.setBlockHeight(840000);
     const premineAmount = 2100000005000000n
@@ -271,6 +271,10 @@ describe("metashrew-runes", () => {
       inputTxHash: block.transactions?.at(1)?.getHash(), // 0 is coinbase, 1 is the mint 
       inputTxOutputIndex: pointer1, // index of output in the input tx that has the runes. In this case it is the default pointer of the mint
     }
+    const inputWithoutRunes = {
+      inputTxHash: block.transactions?.at(1)?.getHash(), // 0 is coinbase, 1 is the mint 
+      inputTxOutputIndex: 2, // index of output in the input tx that has the runes. In this case it is the default pointer of the mint
+    }
     const runeId = {
       block: 840000n,
       tx: 1
@@ -288,7 +292,7 @@ describe("metashrew-runes", () => {
     const outputRunePointer = 1 // leftover amount should go to output 1, so output 1 should have ALL premine runes
 
     block = transferRune([input], runeId, amount, outputIndexToReceiveRunes, [output, refundOutput], outputRunePointer, block)
-    block = transferRune([input], runeId, amount, outputIndexToReceiveRunes, [output, refundOutput], outputRunePointer, block)
+    block = transferRune([inputWithoutRunes], runeId, amount, outputIndexToReceiveRunes, [output, refundOutput], outputRunePointer, block)
 
     program.setBlock(block.toHex());
 
