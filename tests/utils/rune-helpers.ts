@@ -77,7 +77,7 @@ export const initCompleteBlockWithRuneEtching = (
 
 export const transferRune = (
   inputs: {
-    inputTxIndex: number;
+    inputTxHash: Buffer | undefined;
     inputTxOutputIndex: number;
   }[],
   runeId: {
@@ -100,9 +100,8 @@ export const transferRune = (
   }
 
   const blockInputs = inputs.map((input) => {
-    const inputRuneTx = block?.transactions?.at(input.inputTxIndex);
     return {
-      hash: inputRuneTx?.getHash(),
+      hash: input.inputTxHash,
       index: input.inputTxOutputIndex,
       witness: EMPTY_WITNESS,
       script: EMPTY_BUFFER,
