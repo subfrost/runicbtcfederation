@@ -15,7 +15,11 @@ import {
   GENESIS,
 } from "./constants";
 import { PROTOCOL_TAG } from "./constants/protorune";
-import { OutPoint, Output, Input } from "metashrew-as/assembly/blockdata/transaction";
+import {
+  OutPoint,
+  Output,
+  Input,
+} from "metashrew-as/assembly/blockdata/transaction";
 import { protorune } from "../proto/protorune";
 import { stripNullRight } from "../utils";
 import { encodeHexFromBuffer } from "metashrew-as/assembly/utils";
@@ -96,7 +100,6 @@ export class Index {
     return Box.concat(parsed);
   }
 
-
   static processMessage<T>(
     height: u64,
     tx: RunesTransaction,
@@ -125,7 +128,8 @@ export class Index {
         const recvAddr = recvAddresses[map_idx];
         const receiptItemProto = message.receiptItems.get(recvAddr);
 
-        HEIGHT_TO_RECEIVED_RUNE.selectValue<u32>(<u32>height).keyword("/")
+        HEIGHT_TO_RECEIVED_RUNE.selectValue<u32>(<u32>height)
+          .keyword("/")
           .select(String.UTF8.encode(recvAddr))
           .append(receiptItemProto.encode());
       }
@@ -215,8 +219,6 @@ export class Index {
         message.handle<MessageContext>(tx, _block, height, i);
       }
     }
-
-
   }
 
   static indexBlock(height: u32, _block: Block): void {

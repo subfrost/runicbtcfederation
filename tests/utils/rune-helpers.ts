@@ -17,9 +17,9 @@ export const runesbyaddress = async (
   program: IndexerProgram,
   address: string,
 ): Promise<{
-    outpoints: OutPoint[];
-    balanceSheet: RuneOutput[];
-  }> => {
+  outpoints: OutPoint[];
+  balanceSheet: RuneOutput[];
+}> => {
   const cloned = program; // just mutate it
   const result = await MetashrewRunes.prototype.runesbyaddress.call(
     {

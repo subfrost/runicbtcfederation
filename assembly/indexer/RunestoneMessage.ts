@@ -46,7 +46,11 @@ import {
 } from "./constants";
 import { BalanceSheet } from "./BalanceSheet";
 import { RunesTransaction } from "./RunesTransaction";
-import { Input, OutPoint, Output } from "metashrew-as/assembly/blockdata/transaction";
+import {
+  Input,
+  OutPoint,
+  Output,
+} from "metashrew-as/assembly/blockdata/transaction";
 import {
   encodeHexFromBuffer,
   SUBSIDY_HALVING_INTERVAL,
@@ -274,9 +278,11 @@ export class RunestoneMessage {
     senderAddr: ArrayBuffer,
   ): void {
     // get the address this rune is going to
-    const recvAddr = this._getAddressFromOutpoint(OutPoint.from(txid, edictOutput));
+    const recvAddr = this._getAddressFromOutpoint(
+      OutPoint.from(txid, edictOutput),
+    );
     if (recvAddr === null) {
-      console.log("ERROR: unable to get the receiver of the rune")
+      console.log("ERROR: unable to get the receiver of the rune");
     } else {
       const recvAddrStr = String.UTF8.decode(recvAddr);
       let receiptItemProto: protobuf.AddressReceivedReceipt;
@@ -293,13 +299,12 @@ export class RunestoneMessage {
       }
 
       const amountProto = new protobuf.AddressReceivedAmount();
-      amountProto.senderAddress = String.UTF8.decode(senderAddr)
+      amountProto.senderAddress = String.UTF8.decode(senderAddr);
 
       amountProto.amount = changetype<Array<u8>>(amount.toBytes(true));
 
       receiptItemProto.amounts.push(amountProto);
     }
-
   }
 
   processEdicts(
@@ -356,9 +361,7 @@ export class RunestoneMessage {
   }
 
   _getAddressFromOutpoint(outpoint: OutPoint): ArrayBuffer | null {
-    const outputBuf = OUTPOINT_TO_OUTPUT.select(
-      outpoint.toArrayBuffer(),
-    ).get();
+    const outputBuf = OUTPOINT_TO_OUTPUT.select(outpoint.toArrayBuffer()).get();
     const output = new Output(Box.from(outputBuf));
     return output.intoAddress();
   }

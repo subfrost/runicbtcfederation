@@ -14,8 +14,9 @@ export function getAllRuneDeposits(): ArrayBuffer {
   const _address = decodedInput.address;
   const address = changetype<Uint8Array>(_address).buffer;
 
-  const depositsIndexPtr =
-    HEIGHT_TO_RECEIVED_RUNE.selectValue<u32>(height).keyword("/").select(address);
+  const depositsIndexPtr = HEIGHT_TO_RECEIVED_RUNE.selectValue<u32>(height)
+    .keyword("/")
+    .select(address);
 
   const numDeposits = depositsIndexPtr.length();
 
