@@ -1,75 +1,75 @@
-# protorune
+# runicbtcfederation
 
-![Tests](https://img.shields.io/github/actions/workflow/status/AssemblyScript/assemblyscript/test.yml?branch=main&label=test&logo=github)
-![Publish](https://img.shields.io/github/actions/workflow/status/AssemblyScript/assemblyscript/publish.yml?branch=main&label=publish&logo=github)
-[![npm version](https://img.shields.io/npm/v/assemblyscript.svg?color=007acc&logo=npm)](https://www.npmjs.com/package/protorune)
-[![Downloads](https://img.shields.io/npm/dm/typescript.svg)](https://www.npmjs.com/package/protorune)
+Protorune indexer for RUNIC•BTC•FEDERATION and exchange logic for RUNIC•BTC•NOTE.
 
-AssemblyScript boilerplate for architecting protorunes-compatible subprotocols. 
+This README.md defines structures used by the runtime, which include on-chain governance and dividends.
 
-**The protorunes specification is hosted at** 👉🏻👉🏼👉🏽👉🏾👉🏿 [https://github.com/kungfuflex/protorune/wiki](https://github.com/kungfuflex/protorune/wiki)
+## Governance
 
-## IF YOU HAVE DISCOVERED THIS REPOSITORY, READ THIS NEXT LINE
+Unique units of RUNIC•BTC•FEDERATION are ordered according to ordinal theory, in the order they are minted and transferred on their runic representation. Protoburns preserve the ranges that are burned.
 
-NO protoburn shall be honored prior to the first on-chain protoburn of QUORUM•GENESIS•PROTORUNE.
+Vote tokens can only be generated once per unit of RUNIC•BTC•FEDERATION per proposal, and are tracked in terms of the ProposalId.
 
-The first protoburn of QUORUM•GENESIS•PROTORUNE signifies maturity of the protorune specification, as defined in this document.
-
-[https://github.com/kungfuflex/quorumgenesisprotorune](https://github.com/kungfuflex/quorumgenesisprotorune)
-
-#### Genesis-event Caveats
-
-Protoburns prior to the genesis event defined above cannot explicitly be disallowed, due to the federated nature of metaprotocol/subprotocol hierarchies. However, indexers allowing protoburns before the genesis event may cause future interoperability challenges for their subprotocol. Beware!
-
-Protoburns, of course, are encouraged on Bitcoin test networks, as we continue research and experimentation.
-
-#### NOTE: protorune does not have a token
-
-The genesis protorune is strictly a reference implementation and not a financial instrument, nor is it meant for sale. The subprotocol can be included in a protocol for out-of-the-box governance utility on a subprotocol for a project token. The genesis subprotocol naturally is simply intended as an open forum for the protorune standard.
-
-
-## Usage
-
-This repository is meant to be forked.
-
-```sh
-git clone https://github.com/yourorganization/yourprotorunefork
-cd yourprotorunefork
-yarn
+```proto
+message ProposalId {
+  uint64 height = 1;
+  uint32 txindex = 2;
+}
 ```
 
-The indexer WASM file is generated with a build step:
+Message bytes for a protomessage are serialized from the the structure:
 
-```sh
-cd yourprotorunefork
-yarn build
+```proto
+message FederationMessage {
+  oneof data {
+    Proposal proposal = 1;
+    Vote vote = 2;
+    ClaimDividends claim = 3;
+  }
+}
 ```
 
-This produces yourprotorunefork/build/debug.wasm and yourprotorunefork/build/release.wasm
+The substructures are defined later in this section.
 
-Build metashrew:
-```sh
-git clone https://github.com/sandshrewmetaprotocols/metashrew
-cd metashrew
-cargo build --release
+Anyone with at least 10,000 RUNIC•BTC•FEDERATION can create a proposal. The proposal requires at least 5M RUNIC•BTC•FEDERATION for quorum and quorum is reached automatically at 10M RUNIC•BTC•FEDERATION. The quorum height should be at least 200 blocks in the future. To create the proposal, a protorune RunestoneMessage edict should spend RUNIC•BTC•FEDERATION as well as a text based inscription reveal beginning with the text "Federation Proposal:\n" to a protomessage with calldata of the oneof structure being:
+
+```proto
+message Proposal {
+  uint64 quorumHeight = 1;
+  uint64 quorumThreshold = 2;
+  uint64 quorumMinimum = 3;
+  repeated string choices = 4;
+  uint32 voteIndex = 5;
+}
 ```
 
-Run the indexer with metashrew:
-```sh
-./metashrew/target/release/metashrew --log-filters DEBUG --indexer yourprotorunefork/build/debug.wasm --db-dir ~/.metashrew --daemon-dir ~/.bitcoin/bitcoin --network bitcoin
+To vote on a proposal, spend RUNIC•BTC•FEDERATION to a protomessage of the form:
+
+```proto
+message Vote {
+  ProposalId proposal = 1;
+  uint32 voteIndex = 2;
+}
 ```
 
-## Testing
+The pointer in the protomessage points to the output which will hoold vote protorunes which are created 1:1 for the amount of RUNIC•BTC•FEDERATION spent. The refund_pointer will contain the input RUNIC•BTC•FEDERATION spent to the protomessage.
 
-Modify test suite in tests/release.spec.ts to mock blocks.
+Vote tokens can be transferred as part of a Runestone where the u128 for what would normally represent the txindex actually will store the two u32 values concatenated { txindex, voteIndex } to a u64 value then packed with leb128 as usual.
 
-Run the command:
+Proposals are considered to have reached quorum and execute when the total supply of vote tokens >= quorumThreshold OR the block height reaches quorumHeight while the total supply of vote tokens >= quorumMinimum. The resolution of a proposal is measured in terms of the total supply of the vote token for each possible voteIndex in choices.
 
-```sh
-cd yourprotorunefork
-yarn test
-```
+Vote tokens can be only be minted with RUNIC•BTC•FEDERATION 1:1 and the same ranges of RUNIC•BTC•FEDERATION cannot be used to mint vote tokens more than once per range on the same proposal. For this we must index rune ranges to ensure that each smallest unit of the rune is indexed. Vote tokens can be output to a delegated entity, and vote tokens can also be exchanged for a different vote by transferring to a protomessage with Vote.
 
-## License
+It is possible to withdraw a vote by transferring vote tokens to an unspendable output.
 
-MIT
+## Dividends
+
+Holders of RUNIC•BTC•FEDERATION can spend them to a protomessage that claims dividends for those ranges of RUNIC•BTC•FEDERATION spent. The same dividends cannot be claimed more than once for the same ranges. Ranges accrue value proportional to the amount of protocol feeds captured by RUNIC•BTC•NOTE throughput.
+
+Protocol fees must be honored by mandates voted in via proposals.
+
+View functions support querying payouts of dividends by block, as well as net transfers in response to the receipt of RUNIC•BTC•NOTE or BTC itself.
+
+## Author
+
+The SUBFROST Federation
