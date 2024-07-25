@@ -2389,4 +2389,369 @@ export namespace protorune {
       return buf;
     } // encode ProtoMessage
   } // ProtoMessage
+
+  export class AddressReceivedAmount {
+    public senderAddress: string = "";
+    public amount: Array<u8> = new Array<u8>();
+
+    // Decodes AddressReceivedAmount from an ArrayBuffer
+    static decode(buf: ArrayBuffer): AddressReceivedAmount {
+      return AddressReceivedAmount.decodeDataView(new DataView(buf));
+    }
+
+    // Decodes AddressReceivedAmount from a DataView
+    static decodeDataView(view: DataView): AddressReceivedAmount {
+      const decoder = new __proto.SafeDecoder(view);
+      const obj = new AddressReceivedAmount();
+
+      while (!decoder.eof()) {
+        const tag = decoder.tag();
+        const number = tag >>> 3;
+
+        switch (number) {
+          case 1: {
+            obj.senderAddress = decoder.string();
+            break;
+          }
+          case 2: {
+            obj.amount = decoder.bytes();
+            break;
+          }
+
+          default:
+            decoder.skipType(tag & 7);
+            break;
+        }
+      }
+      if (decoder.invalid()) return changetype<AddressReceivedAmount>(0);
+      return obj;
+    } // decode AddressReceivedAmount
+
+    public size(): u32 {
+      let size: u32 = 0;
+
+      size +=
+        this.senderAddress.length > 0
+          ? 1 +
+            __proto.Sizer.varint64(this.senderAddress.length) +
+            this.senderAddress.length
+          : 0;
+      size +=
+        this.amount.length > 0
+          ? 1 + __proto.Sizer.varint64(this.amount.length) + this.amount.length
+          : 0;
+
+      return size;
+    }
+
+    // Encodes AddressReceivedAmount to the ArrayBuffer
+    encode(): ArrayBuffer {
+      return changetype<ArrayBuffer>(
+        StaticArray.fromArray<u8>(this.encodeU8Array())
+      );
+    }
+
+    // Encodes AddressReceivedAmount to the Array<u8>
+    encodeU8Array(
+      encoder: __proto.Encoder = new __proto.Encoder(new Array<u8>())
+    ): Array<u8> {
+      const buf = encoder.buf;
+
+      if (this.senderAddress.length > 0) {
+        encoder.uint32(0xa);
+        encoder.uint32(this.senderAddress.length);
+        encoder.string(this.senderAddress);
+      }
+      if (this.amount.length > 0) {
+        encoder.uint32(0x12);
+        encoder.uint32(this.amount.length);
+        encoder.bytes(this.amount);
+      }
+
+      return buf;
+    } // encode AddressReceivedAmount
+  } // AddressReceivedAmount
+
+  export class AddressReceivedReceipt {
+    public runeId: RuneId = new RuneId();
+    public amounts: Array<AddressReceivedAmount> =
+      new Array<AddressReceivedAmount>();
+
+    // Decodes AddressReceivedReceipt from an ArrayBuffer
+    static decode(buf: ArrayBuffer): AddressReceivedReceipt {
+      return AddressReceivedReceipt.decodeDataView(new DataView(buf));
+    }
+
+    // Decodes AddressReceivedReceipt from a DataView
+    static decodeDataView(view: DataView): AddressReceivedReceipt {
+      const decoder = new __proto.SafeDecoder(view);
+      const obj = new AddressReceivedReceipt();
+
+      while (!decoder.eof()) {
+        const tag = decoder.tag();
+        const number = tag >>> 3;
+
+        switch (number) {
+          case 1: {
+            const length = decoder.uint32();
+            obj.runeId = RuneId.decodeDataView(
+              new DataView(
+                decoder.view.buffer,
+                decoder.pos + decoder.view.byteOffset,
+                length
+              )
+            );
+            decoder.skip(length);
+
+            break;
+          }
+          case 2: {
+            const length = decoder.uint32();
+            obj.amounts.push(
+              AddressReceivedAmount.decodeDataView(
+                new DataView(
+                  decoder.view.buffer,
+                  decoder.pos + decoder.view.byteOffset,
+                  length
+                )
+              )
+            );
+            decoder.skip(length);
+
+            break;
+          }
+
+          default:
+            decoder.skipType(tag & 7);
+            break;
+        }
+      }
+      if (decoder.invalid()) return changetype<AddressReceivedReceipt>(0);
+      return obj;
+    } // decode AddressReceivedReceipt
+
+    public size(): u32 {
+      let size: u32 = 0;
+
+      if (this.runeId != null) {
+        const f: RuneId = this.runeId as RuneId;
+        const messageSize = f.size();
+
+        if (messageSize > 0) {
+          size += 1 + __proto.Sizer.varint64(messageSize) + messageSize;
+        }
+      }
+
+      for (let n: i32 = 0; n < this.amounts.length; n++) {
+        const messageSize = this.amounts[n].size();
+
+        if (messageSize > 0) {
+          size += 1 + __proto.Sizer.varint64(messageSize) + messageSize;
+        }
+      }
+
+      return size;
+    }
+
+    // Encodes AddressReceivedReceipt to the ArrayBuffer
+    encode(): ArrayBuffer {
+      return changetype<ArrayBuffer>(
+        StaticArray.fromArray<u8>(this.encodeU8Array())
+      );
+    }
+
+    // Encodes AddressReceivedReceipt to the Array<u8>
+    encodeU8Array(
+      encoder: __proto.Encoder = new __proto.Encoder(new Array<u8>())
+    ): Array<u8> {
+      const buf = encoder.buf;
+
+      if (this.runeId != null) {
+        const f = this.runeId as RuneId;
+
+        const messageSize = f.size();
+
+        if (messageSize > 0) {
+          encoder.uint32(0xa);
+          encoder.uint32(messageSize);
+          f.encodeU8Array(encoder);
+        }
+      }
+
+      for (let n: i32 = 0; n < this.amounts.length; n++) {
+        const messageSize = this.amounts[n].size();
+
+        if (messageSize > 0) {
+          encoder.uint32(0x12);
+          encoder.uint32(messageSize);
+          this.amounts[n].encodeU8Array(encoder);
+        }
+      }
+
+      return buf;
+    } // encode AddressReceivedReceipt
+  } // AddressReceivedReceipt
+
+  export class AddressReceivedRunesRequest {
+    public height: u32;
+    public address: Array<u8> = new Array<u8>();
+
+    // Decodes AddressReceivedRunesRequest from an ArrayBuffer
+    static decode(buf: ArrayBuffer): AddressReceivedRunesRequest {
+      return AddressReceivedRunesRequest.decodeDataView(new DataView(buf));
+    }
+
+    // Decodes AddressReceivedRunesRequest from a DataView
+    static decodeDataView(view: DataView): AddressReceivedRunesRequest {
+      const decoder = new __proto.SafeDecoder(view);
+      const obj = new AddressReceivedRunesRequest();
+
+      while (!decoder.eof()) {
+        const tag = decoder.tag();
+        const number = tag >>> 3;
+
+        switch (number) {
+          case 1: {
+            obj.height = decoder.uint32();
+            break;
+          }
+          case 2: {
+            obj.address = decoder.bytes();
+            break;
+          }
+
+          default:
+            decoder.skipType(tag & 7);
+            break;
+        }
+      }
+      if (decoder.invalid()) return changetype<AddressReceivedRunesRequest>(0);
+      return obj;
+    } // decode AddressReceivedRunesRequest
+
+    public size(): u32 {
+      let size: u32 = 0;
+
+      size += this.height == 0 ? 0 : 1 + __proto.Sizer.uint32(this.height);
+      size +=
+        this.address.length > 0
+          ? 1 +
+            __proto.Sizer.varint64(this.address.length) +
+            this.address.length
+          : 0;
+
+      return size;
+    }
+
+    // Encodes AddressReceivedRunesRequest to the ArrayBuffer
+    encode(): ArrayBuffer {
+      return changetype<ArrayBuffer>(
+        StaticArray.fromArray<u8>(this.encodeU8Array())
+      );
+    }
+
+    // Encodes AddressReceivedRunesRequest to the Array<u8>
+    encodeU8Array(
+      encoder: __proto.Encoder = new __proto.Encoder(new Array<u8>())
+    ): Array<u8> {
+      const buf = encoder.buf;
+
+      if (this.height != 0) {
+        encoder.uint32(0x8);
+        encoder.uint32(this.height);
+      }
+      if (this.address.length > 0) {
+        encoder.uint32(0x12);
+        encoder.uint32(this.address.length);
+        encoder.bytes(this.address);
+      }
+
+      return buf;
+    } // encode AddressReceivedRunesRequest
+  } // AddressReceivedRunesRequest
+
+  export class AddressReceivedRunesResponse {
+    public receipts: Array<AddressReceivedReceipt> =
+      new Array<AddressReceivedReceipt>();
+
+    // Decodes AddressReceivedRunesResponse from an ArrayBuffer
+    static decode(buf: ArrayBuffer): AddressReceivedRunesResponse {
+      return AddressReceivedRunesResponse.decodeDataView(new DataView(buf));
+    }
+
+    // Decodes AddressReceivedRunesResponse from a DataView
+    static decodeDataView(view: DataView): AddressReceivedRunesResponse {
+      const decoder = new __proto.SafeDecoder(view);
+      const obj = new AddressReceivedRunesResponse();
+
+      while (!decoder.eof()) {
+        const tag = decoder.tag();
+        const number = tag >>> 3;
+
+        switch (number) {
+          case 1: {
+            const length = decoder.uint32();
+            obj.receipts.push(
+              AddressReceivedReceipt.decodeDataView(
+                new DataView(
+                  decoder.view.buffer,
+                  decoder.pos + decoder.view.byteOffset,
+                  length
+                )
+              )
+            );
+            decoder.skip(length);
+
+            break;
+          }
+
+          default:
+            decoder.skipType(tag & 7);
+            break;
+        }
+      }
+      if (decoder.invalid()) return changetype<AddressReceivedRunesResponse>(0);
+      return obj;
+    } // decode AddressReceivedRunesResponse
+
+    public size(): u32 {
+      let size: u32 = 0;
+
+      for (let n: i32 = 0; n < this.receipts.length; n++) {
+        const messageSize = this.receipts[n].size();
+
+        if (messageSize > 0) {
+          size += 1 + __proto.Sizer.varint64(messageSize) + messageSize;
+        }
+      }
+
+      return size;
+    }
+
+    // Encodes AddressReceivedRunesResponse to the ArrayBuffer
+    encode(): ArrayBuffer {
+      return changetype<ArrayBuffer>(
+        StaticArray.fromArray<u8>(this.encodeU8Array())
+      );
+    }
+
+    // Encodes AddressReceivedRunesResponse to the Array<u8>
+    encodeU8Array(
+      encoder: __proto.Encoder = new __proto.Encoder(new Array<u8>())
+    ): Array<u8> {
+      const buf = encoder.buf;
+
+      for (let n: i32 = 0; n < this.receipts.length; n++) {
+        const messageSize = this.receipts[n].size();
+
+        if (messageSize > 0) {
+          encoder.uint32(0xa);
+          encoder.uint32(messageSize);
+          this.receipts[n].encodeU8Array(encoder);
+        }
+      }
+
+      return buf;
+    } // encode AddressReceivedRunesResponse
+  } // AddressReceivedRunesResponse
 } // protorune

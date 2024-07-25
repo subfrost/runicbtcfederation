@@ -7,7 +7,6 @@ import {
   fieldToU128,
   fieldToArrayBuffer,
   fieldToArrayBuffer15Bytes,
-  fieldToArrayBuffer15Bytes,
 } from "../utils";
 import { Flag } from "./flags/ProtoruneFlag";
 import { console } from "metashrew-as/assembly/utils/logging";

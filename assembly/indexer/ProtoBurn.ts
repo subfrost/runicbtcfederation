@@ -15,8 +15,13 @@ export class ProtoBurn {
     this.table = PROTORUNE_TABLE.for(protocol_tag);
   }
 
-  process(balanceSheet: BalanceSheet, outpoint: ArrayBuffer): void {
-    for (let i = 0; i < balanceSheet.runes.length; i++) {
+  process(
+    balanceSheet: BalanceSheet,
+    outpoint: ArrayBuffer,
+    indices: Array<i32>,
+  ): void {
+    for (let idx = 0; idx < indices.length; idx++) {
+      const i = indices[idx];
       const runeId = balanceSheet.runes[i];
       const name = base.RUNE_ID_TO_ETCHING.select(runeId).get();
       this.table.RUNE_ID_TO_ETCHING.select(runeId).set(name);
@@ -27,7 +32,8 @@ export class ProtoBurn {
       );
       this.table.SYMBOL.select(name).set(base.SYMBOL.select(name).get());
       this.table.ETCHINGS.append(name);
-      balanceSheet.save(this.table.OUTPOINT_TO_RUNES.select(outpoint));
+      balanceSheet.saveIndex(i, this.table.OUTPOINT_TO_RUNES.select(outpoint));
     }
   }
+
 }

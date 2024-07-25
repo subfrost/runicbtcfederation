@@ -41,21 +41,31 @@ import {
   MINIMUM_NAME,
   TWENTY_SIX,
   RESERVED_NAME,
+  // PROTOCOLS_TO_INDEX,
+  HEIGHT_TO_RECEIVED_RUNE,
+  HEIGHT_TO_RECEIVED_BTC,
 } from "./constants";
 import { PROTOCOLS_TO_INDEX, PROTORUNE_TABLE } from "./tables/protorune";
 import { BalanceSheet } from "./BalanceSheet";
 import { RunesTransaction } from "./RunesTransaction";
-import { Input, OutPoint } from "metashrew-as/assembly/blockdata/transaction";
+import { Input, OutPoint, Output } from "metashrew-as/assembly/blockdata/transaction";
 import { SUBSIDY_HALVING_INTERVAL } from "metashrew-as/assembly/utils";
 import { ProtoBurn } from "./ProtoBurn";
 import { ProtoStone } from "./ProtoStone";
 import { Index } from "./Indexer";
 import { ProtoruneMessage } from "./ProtoruneMessage";
+import { protorune as protobuf } from "../proto/protorune";
+import { OUTPOINT_TO_OUTPUT } from "metashrew-spendables/assembly/tables";
+import { ProtoMessage } from "./protomessage";
+import { encodeHexFromBuffer } from "metashrew-as/assembly/utils/hex";
+
+
 
 export class RunestoneMessage {
   public fields: Map<u64, Array<u128>>;
   public edicts: Array<StaticArray<u128>>;
-  protoBurns: Map<u32, ProtoBurn>;
+  public receiptItems: Map<string, protobuf.AddressReceivedReceipt>;
+  protoBurns: Array<ProtoBurn>;
   table: PROTORUNE_TABLE;
   constructor(
     fields: Map<u64, Array<u128>>,
@@ -64,7 +74,8 @@ export class RunestoneMessage {
   ) {
     this.fields = fields;
     this.edicts = edicts;
-    this.protoBurns = new Map<u32, ProtoBurn>();
+    this.receiptItems = new Map<string, protobuf.AddressReceivedReceipt>();
+    this.protoBurns = new Array<ProtoBurn>();
     this.table = table;
   }
   inspect(): string {
@@ -268,7 +279,42 @@ export class RunestoneMessage {
     ETCHINGS.append(name);
     return true;
   }
+  
+  saveReceivedRuneToReceipts(
+    txid: ArrayBuffer,
+    runeId: RuneId,
+    edictOutput: u32,
+    amount: u128,
+    senderAddr: ArrayBuffer,
+  ): void {
+    // get the address this rune is going to
+    const recvAddr = this._getAddressFromOutpoint(OutPoint.from(txid, edictOutput));
+    if (recvAddr === null) {
+      console.log("ERROR: unable to get the receiver of the rune")
+    } else {
+      const recvAddrStr = String.UTF8.decode(recvAddr);
+      let receiptItemProto: protobuf.AddressReceivedReceipt;
+      if (this.receiptItems.has(recvAddrStr)) {
+        receiptItemProto = this.receiptItems.get(recvAddrStr);
+      } else {
+        receiptItemProto = new protobuf.AddressReceivedReceipt();
+        const runeIdProto = new protobuf.RuneId();
+        runeIdProto.height = <u32>runeId.block; // copied from outpoint.ts, is this safe?
+        runeIdProto.txindex = runeId.tx;
 
+        receiptItemProto.runeId = runeIdProto;
+        this.receiptItems.set(recvAddrStr, receiptItemProto);
+      }
+
+      const amountProto = new protobuf.AddressReceivedAmount();
+      amountProto.senderAddress = String.UTF8.decode(senderAddr)
+
+      amountProto.amount = changetype<Array<u8>>(amount.toBytes(true));
+
+      receiptItemProto.amounts.push(amountProto);
+    }
+
+  }
   processEdicts(
     balancesByOutput: Map<u32, BalanceSheet>,
     balanceSheet: BalanceSheet,
@@ -295,6 +341,27 @@ export class RunestoneMessage {
     }
     return isCenotaph;
   }
+  
+  _getAddressFromOutpoint(outpoint: OutPoint): ArrayBuffer | null {
+    const outputBuf = OUTPOINT_TO_OUTPUT.select(
+      outpoint.toArrayBuffer(),
+    ).get();
+    const output = new Output(Box.from(outputBuf));
+    return output.intoAddress();
+  }
+
+  getSenderAddress(tx: RunesTransaction): ArrayBuffer | null {
+    // find sender addr
+    for (let in_idx = 0; in_idx < tx.ins.length; in_idx++) {
+      const input: Input = tx.ins[in_idx];
+      const address = this._getAddressFromOutpoint(input.previousOutput());
+      if (address !== null) {
+        return address;
+      }
+    }
+    return null;
+  }
+
   process(
     tx: RunesTransaction,
     txid: ArrayBuffer,
@@ -315,6 +382,10 @@ export class RunestoneMessage {
     this.etch(<u64>height, <u32>txindex, balanceSheet, tx);
 
     const messages = new Array<ProtoruneMessage>();
+    const protomessages: Map<string, Array<ProtoMessage>> = new Map<
+      string,
+      Array<ProtoMessage>
+    >();
     // process all protostones here
     if (this.fields.has(Field.PROTORUNE)) {
       const protostones = ProtoStone.parseFromFieldData(
@@ -329,20 +400,24 @@ export class RunestoneMessage {
 
         if (PROTOCOLS_TO_INDEX.has(protostone.protocol_id)) {
           if (protostone.isBurn()) {
+            console.log("FOUND BURN");
             const protoburn = new ProtoBurn([
               protostone.fields.get(ProtoruneField.BURN)[0],
               protostone.fields.get(ProtoruneField.POINTER)[0],
             ]);
-            this.protoBurns.set(tx.outs.length + protostoneIdx, protoburn);
+            this.protoBurns.push(protoburn);
           }
           if (protostone.isMessage()) {
+            console.log("FOUND message");
             const str = protostone.protocol_id.toString();
-            let ary: Array<ProtoStone> = new Array<ProtoStone>();
-            if (tx.protostones.has(str)) {
-              ary = tx.protostones.get(str);
+            let ary: Array<ProtoMessage> = new Array<ProtoMessage>();
+            if (protomessages.has(str)) {
+              ary = protomessages.get(str);
             }
-            ary.push(protostone);
-            tx.protostones.set(str, ary);
+            ary.push(
+              ProtoMessage.from(protostone, tx.outs.length + ary.length),
+            );
+            protomessages.set(str, ary);
           }
           if (protostone.edicts.length > 0) {
             messages.push(ProtoruneMessage.fromProtoStone(protostone));
@@ -350,6 +425,8 @@ export class RunestoneMessage {
         }
       }
     }
+
+    tx.protomessages = protomessages;
 
     const unallocatedTo = this.fields.has(Field.POINTER)
       ? fieldTo<u32>(this.fields.get(Field.POINTER))
@@ -363,10 +440,12 @@ export class RunestoneMessage {
     }
     const allOutputs = balancesByOutput.keys();
 
+    // process protostone edicts
     for (let m = 0; m < messages.length; m++) {
       messages[m].process(tx, txid, height, m);
     }
 
+    // process protoburns
     for (let x = 0; x < allOutputs.length; x++) {
       const output = allOutputs[x];
       const sheet = balancesByOutput.get(output);
@@ -375,14 +454,43 @@ export class RunestoneMessage {
         isCenotaph,
       );
       // save protoburns to index
-      if (this.protoBurns.has(output) && !isCenotaph) {
-        const protoBurn = this.protoBurns.get(output);
-        protoBurn.process(
-          sheet,
-          OutPoint.from(txid, protoBurn.pointer).toArrayBuffer(),
-        );
+
+      if (output == tx.runestoneIndex && !isCenotaph) {
+        console.log("logging burn at output " + output.toString());
+        console.log(sheet.inspect());
+        const burnBalances: Map<i32, Array<i32>> = new Map<i32, Array<i32>>();
+        const burnCount: Map<string, i32> = new Map<string, i32>();
+
+        //sort edicts by order of appearance: 1st edict per rune gets sent to the first protoburn
+        for (let i = 0; i < sheet.runes.length; i++) {
+          const rune = encodeHexFromBuffer(sheet.runes[i]);
+          let count: i32 = 0;
+          if (burnCount.has(rune)) {
+            count = burnCount.get(rune) + 1;
+            burnCount.set(rune, count);
+          } else {
+            burnCount.set(rune, count);
+          }
+          let ary: Array<i32> = new Array<i32>();
+          if (burnBalances.has(count)) {
+            ary = burnBalances.get(count);
+          }
+          ary.push(i);
+          burnBalances.set(count, ary);
+        }
+        for (let i = 0; i < this.protoBurns.length; i++) {
+          // TODO: handle multiple edicts to output 0
+
+          const protoBurn = this.protoBurns[i];
+          protoBurn.process(
+            sheet,
+            OutPoint.from(txid, protoBurn.pointer).toArrayBuffer(),
+            burnBalances.has(i) ? burnBalances.get(i) : new Array<i32>(),
+          );
+        }
       }
     }
     return balancesByOutput;
   }
+
 }

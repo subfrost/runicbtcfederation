@@ -10,14 +10,19 @@ import {
   OUTPOINT_TO_HEIGHT,
   HEIGHT_TO_BLOCKHASH,
   BLOCKHASH_TO_HEIGHT,
+  HEIGHT_TO_RECEIVED_RUNE,
+  HEIGHT_TO_RECEIVED_BTC,
   GENESIS,
 } from "./constants";
-import { OutPoint, Output } from "metashrew-as/assembly/blockdata/transaction";
+// import { PROTOCOL_TAG } from "./constants/rune";
+import { OutPoint, Output, Input } from "metashrew-as/assembly/blockdata/transaction";
 import { checkForNonDataPush, stripNullRight } from "../utils";
 import { ProtoMessage, MessageContext } from "./protomessage";
 import { BalanceSheet } from "./BalanceSheet";
 import { ProtoStone } from "./ProtoStone";
 import { u128 } from "as-bignum/assembly";
+import { OUTPOINT_SPENDABLE_BY } from "metashrew-spendables/assembly/tables";
+
 
 export class Index {
   static indexOutpoints(
@@ -40,7 +45,6 @@ export class Index {
       const input = tx.ins[i];
       // check that there is 1 data push
       const inscription = input.inscription();
-
       if (changetype<usize>(inscription) === 0 || inscription == null) continue;
       const commitment = inscription.field(0);
       if (!commitment) continue;
@@ -84,8 +88,129 @@ export class Index {
 
   static getMessagePayload(output: Output, skip: u32 = 2): ArrayBuffer {
     const parsed = scriptParse(output.script).slice(skip);
-    return checkForNonDataPush(parsed);
+    if (
+      parsed.findIndex((v: Box, i: i32, ary: Array<Box>) => {
+        return v.start === usize.MAX_VALUE;
+      }) !== -1
+    )
+      return new ArrayBuffer(0);
+    return Box.concat(parsed);
   }
+
+  // static processMessage<T>(
+  //   height: u64,
+  //   tx: RunesTransaction,
+  //   txid: ArrayBuffer,
+  //   txindex: u32,
+  //   outputIndex: i32,
+  // ): Map<u32, BalanceSheet> {
+  //   if (outputIndex > -1) {
+  //     const runestoneOutput = tx.outs[outputIndex];
+  //     const payload = Index.getMessagePayload(runestoneOutput);
+  //     if (changetype<usize>(payload) == 0) return new Map<u32, BalanceSheet>();
+  //     const message = RunestoneMessage.parse(payload);
+  //     if (changetype<usize>(message) === 0) return new Map<u32, BalanceSheet>();
+
+  //     changetype<T>(message).getSenderAddress(tx);
+  //     changetype<T>(message).process(tx, txid, <u32>height, txindex);
+
+  //     const recvAddresses = message.receiptItems.keys();
+  //     for (
+  //       let map_idx: i32 = 0;
+  //       map_idx < message.receiptItems.size;
+  //       map_idx++
+  //     ) {
+  //       const recvAddr = recvAddresses[map_idx];
+  //       const receiptItemProto = message.receiptItems.get(recvAddr);
+
+  //       HEIGHT_TO_RECEIVED_RUNE.selectValue<u32>(<u32>height).keyword("/")
+  //         .select(String.UTF8.encode(recvAddr))
+  //         .append(receiptItemProto.encode());
+  //     }
+  //   }
+  //   return new Map<u32, BalanceSheet>();
+  // }
+
+  // static parseProtosplit(
+  //   tx: RunesTransaction,
+  //   startOutpoint: u32,
+  //   message: ArrayBuffer,
+  // ): ArrayBuffer {
+  //   const payload = Index.getMessagePayload(tx.outs[startOutpoint]);
+  //   if (changetype<usize>(payload) == 0) return message;
+  //   const protostone = ProtoStone.parse(payload);
+  //   if (changetype<usize>(protostone) == 0)
+  //     Box.concat([Box.from(message), Box.from(payload)]);
+  //   const splits = protostone.splits();
+  //   if (splits.length > 0) {
+  //     for (let i = 0; i < splits.length; i++) {
+  //       return Index.parseProtosplit(tx, splits[i], message);
+  //     }
+  //   }
+  //   return message;
+  // }
+
+  // static processRunesTransaction(
+  //   _block: Block,
+  //   tx: RunesTransaction,
+  //   txid: ArrayBuffer,
+  //   height: u32,
+  //   i: u32,
+  // ): void {
+  //   tx.processRunestones();
+  //   if (height >= GENESIS) {
+  //     Index.processMessage<RunestoneMessage>(
+  //       height,
+  //       tx,
+  //       txid,
+  //       i,
+  //       tx.tags.runestone,
+  //     );
+  //     const sheets = Index.processMessage<ProtoruneMessage>(
+  //       height,
+  //       tx,
+  //       txid,
+  //       i,
+  //       tx.tags.protorunestone,
+  //     );
+  //     const protoMessages: Map<u16, ProtoMessage> = new Map<
+  //       u16,
+  //       ProtoMessage
+  //     >();
+  //     // parse protomessages
+  //     const protomessageKeys = tx.tags.protomessage.keys();
+  //     for (let m = 0; m < protomessageKeys.length; m++) {
+  //       const index = tx.tags.protomessage[protomessageKeys[m]];
+  //       const out = tx.outs[index];
+  //       const parsed = scriptParse(out.script).slice(2);
+  //       const message = protorune.ProtoMessage.decode(Box.concat(parsed));
+  //       protoMessages.set(
+  //         protomessageKeys[m],
+  //         new ProtoMessage(message, index, sheets),
+  //       );
+  //     }
+  //     //parse protosplit
+  //     const protosplitKeys = tx.tags.protosplits.keys();
+  //     const protoSplitData = new Map<u16, ArrayBuffer>();
+  //     for (let k = 0; k < protosplitKeys.length; k++) {
+  //       const outs = tx.tags.protosplits.get(protosplitKeys[k]);
+  //       let message = new ArrayBuffer(0);
+  //       for (let o = 0; o < outs.length; o++) {
+  //         message = Box.concat([
+  //           Box.from(message),
+  //           Box.from(Index.parseProtosplit(tx, outs[o], message)),
+  //         ]);
+  //       }
+  //       protoSplitData.set(protosplitKeys[k], message);
+  //     }
+  //     // process protomessage
+  //     const protoMessageTypes = protoMessages.keys();
+  //     for (let m = 0; m < protoMessageTypes.length; m++) {
+  //       const message = protoMessages.get(protoMessageTypes[m]);
+  //       message.handle<MessageContext>(tx, _block, height, i);
+  //     }
+  //   }
+  // }
 
   static processRunestone<T extends RunestoneMessage>(
     height: u64,
@@ -116,30 +241,18 @@ export class Index {
     i: u32,
     p: string,
   ): void {
-    const protoMessages: Map<string, ProtoMessage> = new Map<
-      string,
-      ProtoMessage
-    >();
+    const protoMessages: Map<string, ProtoMessage[]> = tx.protomessages;
     // parse protostones
-    const protostoneKeys = tx.protostones.keys();
-    for (let m = 0; m < protostoneKeys.length; m++) {
-      if (protostoneKeys[m] != p) continue;
-      const protostones = tx.protostones.get(p);
-      for (let s = 0; s < protostones.length; s++) {
-        const protostone = protostones[s];
-        protoMessages.set(
-          protostoneKeys[m],
-          ProtoMessage.from(protostone, tx.runestoneIndex),
-        );
-      }
-    }
-
     // process protomessage
     const protoMessageTypes = protoMessages.keys();
     for (let m = 0; m < protoMessageTypes.length; m++) {
-      const message = protoMessages.get(protoMessageTypes[m]);
-      message.handle<T>(tx, block, height, i);
+      const messages = protoMessages.get(protoMessageTypes[m]);
+      for (let msgIdx = 0; msgIdx < messages.length; msgIdx++) {
+        const message = messages[msgIdx];
+        message.handle<T>(tx, block, height, i);
+      }
     }
+
   }
   static initializeSubprotocols(): void {
     MessageContext.initialiseProtocol();
@@ -154,8 +267,8 @@ export class Index {
     HEIGHT_TO_BLOCKHASH.selectValue<u32>(height).set(block.blockhash());
     BLOCKHASH_TO_HEIGHT.select(block.blockhash()).setValue<u32>(height);
     block.saveTransactions(height);
-    for (let i: i32 = 0; i < block.transactions.length; i++) {
-      const tx = block.getTransaction(i);
+    for (let txIdx: i32 = 0; txIdx < block.transactions.length; txIdx++) {
+      const tx = block.getTransaction(txIdx);
       const txid = tx.txid();
       tx.processRunestones();
       Index.indexOutpoints(tx, txid, height);
@@ -164,7 +277,7 @@ export class Index {
         height,
         tx,
         txid,
-        i,
+        txIdx,
         outputIndex,
         u128.Zero,
       );
@@ -173,9 +286,10 @@ export class Index {
         height,
         tx,
         txid,
-        i,
+        txIdx,
         MessageContext.protocol_tag().toString(),
       );
     }
   }
+
 }

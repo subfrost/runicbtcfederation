@@ -6,23 +6,18 @@ import {
 import {
   RUNESTONE_TAG,
   OP_RETURN,
-  PROTOBURN_TAG,
-  PROTOSTONE_TAG,
-  CHUNK_TAG,
 } from "./constants";
-import { PROTOCOLS_TO_INDEX } from "./tables/protorune";
 import { readULEB128ToU128 } from "../leb128";
 import { u128 } from "as-bignum/assembly";
 import { Box, console, scriptParse } from "metashrew-as/assembly/utils";
-import { checkForNonDataPush } from "../utils";
-import { ProtoStone } from "./ProtoStone";
+import { ProtoMessage } from "./protomessage";
 
 @final
 export class RunesTransaction extends Transaction {
   runestoneIndex: i32 = -1;
-  protostones: Map<string, Array<ProtoStone>> = new Map<
+  protomessages: Map<string, Array<ProtoMessage>> = new Map<
     string,
-    Array<ProtoStone>
+    Array<ProtoMessage>
   >();
   processRunestones(): void {
     for (let i = 0; i < this.outs.length; i++) {
@@ -47,4 +42,5 @@ export class RunesTransaction extends Transaction {
   outpoint(vout: i32): ArrayBuffer {
     return OutPoint.from(this.txid(), <u32>vout).toArrayBuffer();
   }
+
 }

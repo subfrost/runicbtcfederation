@@ -91,14 +91,14 @@ export class ProtoruneMessage extends RunestoneMessage {
     //@TODO: save sheet properly
     const runesToOutputs = balancesByOutput.keys();
 
-    for (let x = 0; x < runesToOutputs.length; x++) {
-      const sheet = balancesByOutput.get(runesToOutputs[x]);
-      sheet.save(
-        this.table.OUTPOINT_TO_RUNES.select(
-          OutPoint.from(txid, runesToOutputs[x]).toArrayBuffer(),
-        ),
-      );
-    }
+    // for (let x = 0; x < runesToOutputs.length; x++) {
+    //   const sheet = balancesByOutput.get(runesToOutputs[x]);
+    //   sheet.save(
+    //     this.table.OUTPOINT_TO_RUNES.select(
+    //       OutPoint.from(txid, runesToOutputs[x]).toArrayBuffer(),
+    //     ),
+    //   );
+    // }
     return balancesByOutput;
   }
 }
