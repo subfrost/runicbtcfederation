@@ -7,35 +7,46 @@ import { PAYMENTS_TABLE } from "./tables/tables";
 import { Script } from "metashrew-as/assembly/utils/yabsp";
 import { Address } from "metashrew-as/assembly/blockdata/address";
 
-export class Index {
+function intoAddress(output: Output): ArrayBuffer {
+  const address = output.intoAddress();
+  if (address === null) return String.UTF8.encode("UNSPENDABLE");
+  return address as ArrayBuffer;
+}
+
+export function bytesToOutput(v: ArrayBuffer): Output {
+  const output = new Output(Box.from(data));
+  return output;
+}
+
+export class PaymentsIndex {
     static indexBlock(height: u32, block: Block){
         for (let i = 0; i < block.transactions.length; i++){
             const tx = block.transactions[i];
             let inputs = tx.ins;
-            let input_idx = 0;
+            let inputIndex = 0;
             // amts are 1:1 with inputs
-            let input_amts = this.getInputAmounts(inputs);
+            let inputAmounts = this.getInputAmounts(inputs);
             for (let j = 0; j < tx.outs.length; j++){
                 const output = tx.outs[j];
-                let amt_remaining = output.value;
-                while (amt_remaining > 0 && input_idx < inputs.length){ 
-                    const curr = inputs[input_idx];
-                    const amt = input_amts[input_idx];
-                    const diff = amt - amt_remaining;
+                let amountRemaining = output.value;
+                while (amountRemaining > 0 && inputIndex < inputs.length){ 
+                    const curr = inputs[inputIndex];
+                    const amt = inputAmounts[inputIndex];
+                    const diff = amt - amountRemaining;
                     // if the input amt covers the entire amt of the output, then  
                     if(diff > 0) {
-                        amt_remaining = 0;
-                        input_amts[input_idx] = diff;
+                        amountRemaining = 0;
+                        inputAmounts[inputIndex] = diff;
                     } else if (diff < 0) {
                         // we have used up all the sats in the current input, we can move to the next one
-                        amt_remaining -= amt;
-                        input_amts[input_idx] = 0;
-                        input_idx++;
+                        amountRemaining -= amt;
+                        inputAmounts[inputIndex] = 0;
+                        inputIndex++;
                     }
                     // it should never equal zero because there must be excess to pay for fees
                     // now we can save the payment
-                    const inputAddr = Address.from(Script.from(curr.script));
-                    const recipientPointer = PAYMENTS_TABLE.selectValue<u32>(height).keyword("/").select(output.intoAddress() as ArrayBuffer);
+                    const inputAddr = /* TODO: finish */
+                    const recipientPointer = PAYMENTS_TABLE.selectValue<u32>(height).keyword("/").select(intoAddress(output));
                     const ptr = recipientPointer.keyword("/").select(inputAddr as ArrayBuffer);
                     if(ptr.length() == 0){
                         recipientPointer.append(inputAddr as ArrayBuffer);
@@ -53,6 +64,7 @@ export class Index {
             const prev_out = inputs[i].previousOutput().toArrayBuffer();
             const output = OUTPOINT_TO_OUTPUT.select(prev_out).unwrap();
             amts[i] = bytesToOutput(output).value;
+            const address = bytesToOutput(output).intoAddress();
         }
         return amts;
     }
