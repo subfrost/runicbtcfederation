@@ -312,6 +312,19 @@ export interface AddressReceivedRunesResponse {
      */
     receipts: AddressReceivedReceipt[];
 }
+/**
+ * @generated from protobuf message protorune.Payment
+ */
+export interface Payment {
+    /**
+     * @generated from protobuf field: uint32 height = 1;
+     */
+    height: number;
+    /**
+     * @generated from protobuf field: bytes recipient = 2;
+     */
+    recipient: Uint8Array;
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class RuneId$Type extends MessageType<RuneId> {
     constructor() {
@@ -1544,3 +1557,58 @@ class AddressReceivedRunesResponse$Type extends MessageType<AddressReceivedRunes
  * @generated MessageType for protobuf message protorune.AddressReceivedRunesResponse
  */
 export const AddressReceivedRunesResponse = new AddressReceivedRunesResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Payment$Type extends MessageType<Payment> {
+    constructor() {
+        super("protorune.Payment", [
+            { no: 1, name: "height", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 2, name: "recipient", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Payment>): Payment {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.height = 0;
+        message.recipient = new Uint8Array(0);
+        if (value !== undefined)
+            reflectionMergePartial<Payment>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Payment): Payment {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* uint32 height */ 1:
+                    message.height = reader.uint32();
+                    break;
+                case /* bytes recipient */ 2:
+                    message.recipient = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Payment, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* uint32 height = 1; */
+        if (message.height !== 0)
+            writer.tag(1, WireType.Varint).uint32(message.height);
+        /* bytes recipient = 2; */
+        if (message.recipient.length)
+            writer.tag(2, WireType.LengthDelimited).bytes(message.recipient);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message protorune.Payment
+ */
+export const Payment = new Payment$Type();

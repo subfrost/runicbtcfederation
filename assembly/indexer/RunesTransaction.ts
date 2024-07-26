@@ -3,10 +3,7 @@ import {
   Output,
   OutPoint,
 } from "metashrew-as/assembly/blockdata/transaction";
-import {
-  RUNESTONE_TAG,
-  OP_RETURN,
-} from "./constants";
+import { RUNESTONE_TAG, OP_RETURN } from "./constants";
 import { readULEB128ToU128 } from "../leb128";
 import { u128 } from "as-bignum/assembly";
 import { Box, console, scriptParse } from "metashrew-as/assembly/utils";
@@ -42,5 +39,4 @@ export class RunesTransaction extends Transaction {
   outpoint(vout: i32): ArrayBuffer {
     return OutPoint.from(this.txid(), <u32>vout).toArrayBuffer();
   }
-
 }

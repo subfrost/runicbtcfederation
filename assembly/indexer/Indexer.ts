@@ -15,14 +15,17 @@ import {
   GENESIS,
 } from "./constants";
 // import { PROTOCOL_TAG } from "./constants/rune";
-import { OutPoint, Output, Input } from "metashrew-as/assembly/blockdata/transaction";
+import {
+  OutPoint,
+  Output,
+  Input,
+} from "metashrew-as/assembly/blockdata/transaction";
 import { checkForNonDataPush, stripNullRight } from "../utils";
 import { ProtoMessage, MessageContext } from "./protomessage";
 import { BalanceSheet } from "./BalanceSheet";
 import { ProtoStone } from "./ProtoStone";
 import { u128 } from "as-bignum/assembly";
 import { OUTPOINT_SPENDABLE_BY } from "metashrew-spendables/assembly/tables";
-
 
 export class Index {
   static indexOutpoints(
@@ -252,7 +255,6 @@ export class Index {
         message.handle<T>(tx, block, height, i);
       }
     }
-
   }
   static initializeSubprotocols(): void {
     MessageContext.initialiseProtocol();
@@ -291,5 +293,4 @@ export class Index {
       );
     }
   }
-
 }

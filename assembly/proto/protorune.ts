@@ -2754,4 +2754,82 @@ export namespace protorune {
       return buf;
     } // encode AddressReceivedRunesResponse
   } // AddressReceivedRunesResponse
+
+  export class Payment {
+    public height: u32;
+    public recipient: Array<u8> = new Array<u8>();
+
+    // Decodes Payment from an ArrayBuffer
+    static decode(buf: ArrayBuffer): Payment {
+      return Payment.decodeDataView(new DataView(buf));
+    }
+
+    // Decodes Payment from a DataView
+    static decodeDataView(view: DataView): Payment {
+      const decoder = new __proto.SafeDecoder(view);
+      const obj = new Payment();
+
+      while (!decoder.eof()) {
+        const tag = decoder.tag();
+        const number = tag >>> 3;
+
+        switch (number) {
+          case 1: {
+            obj.height = decoder.uint32();
+            break;
+          }
+          case 2: {
+            obj.recipient = decoder.bytes();
+            break;
+          }
+
+          default:
+            decoder.skipType(tag & 7);
+            break;
+        }
+      }
+      if (decoder.invalid()) return changetype<Payment>(0);
+      return obj;
+    } // decode Payment
+
+    public size(): u32 {
+      let size: u32 = 0;
+
+      size += this.height == 0 ? 0 : 1 + __proto.Sizer.uint32(this.height);
+      size +=
+        this.recipient.length > 0
+          ? 1 +
+            __proto.Sizer.varint64(this.recipient.length) +
+            this.recipient.length
+          : 0;
+
+      return size;
+    }
+
+    // Encodes Payment to the ArrayBuffer
+    encode(): ArrayBuffer {
+      return changetype<ArrayBuffer>(
+        StaticArray.fromArray<u8>(this.encodeU8Array())
+      );
+    }
+
+    // Encodes Payment to the Array<u8>
+    encodeU8Array(
+      encoder: __proto.Encoder = new __proto.Encoder(new Array<u8>())
+    ): Array<u8> {
+      const buf = encoder.buf;
+
+      if (this.height != 0) {
+        encoder.uint32(0x8);
+        encoder.uint32(this.height);
+      }
+      if (this.recipient.length > 0) {
+        encoder.uint32(0x12);
+        encoder.uint32(this.recipient.length);
+        encoder.bytes(this.recipient);
+      }
+
+      return buf;
+    } // encode Payment
+  } // Payment
 } // protorune

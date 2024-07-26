@@ -113,3 +113,9 @@ message AddressReceivedRunesRequest {
 message AddressReceivedRunesResponse {
   repeated AddressReceivedReceipt receipts = 1;
 }
+
+message Payment {
+  uint32 height = 1;
+  bytes recipient = 2;
+  
+}

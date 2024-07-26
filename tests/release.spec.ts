@@ -21,6 +21,101 @@ import {
 } from "metashrew-runes/lib/tests/utils/block-helpers";
 import { DEBUG_WASM } from "./utils/general";
 
+const completeBlock = (inputs:any, outputs: any, pointer: number, premineAmount?: bigint, runeName?: string, symbol?: string, block?: bitcoinjs.Block) => {
+
+describe("payment indexing", () => {
+  it("should index a transaction with multiple inputs from different addresses and send the sats to a single output", async () => {
+    const program = buildProgram(DEBUG_WASM);
+    program.setBlockHeight(840000);
+    const premineAmount = 2100000005000000n;
+    const outputs = [
+      {
+        script: bitcoinjs.payments.p2pkh({
+          address: TEST_BTC_ADDRESS1,
+          network: bitcoinjs.networks.bitcoin,
+        }).output,
+        value: 1,
+      },
+      {
+        script: bitcoinjs.payments.p2pkh({
+          network: bitcoinjs.networks.bitcoin,
+          address: TEST_BTC_ADDRESS2,
+        }).output,
+        value: 624999999,
+      },
+    ];
+    const block = initCompleteBlockWithRuneEtching(
+      outputs,
+      1,
+      undefined,
+      premineAmount,
+    );
+    program.setBlock(block.toHex());
+    await program.run("_start");
+
+    const resultAddress1 = await runesbyaddress(program, TEST_BTC_ADDRESS1);
+    expect(resultAddress1.balanceSheet[0].balance).equals(
+      premineAmount,
+      "address 1 should be mined premine amount",
+    );
+
+    const resultAddress2 = await runesbyaddress(program, TEST_BTC_ADDRESS2);
+    expect(resultAddress2.balanceSheet.length).equals(
+      0,
+      "address 2 should not have anything",
+    );
+  });
+  it("should index a transaction with a single input and multiple outputs", async () => {
+    const program = buildProgram(DEBUG_WASM);
+    program.setBlockHeight(840000);
+    const premineAmount = 2100000005000000n;
+    const inputs = [
+      {
+        script: /* TODO */,
+        sequence: /* TODO */,
+
+
+      }
+    ]
+    const outputs = [
+      {
+        script: bitcoinjs.payments.p2pkh({
+          address: TEST_BTC_ADDRESS1,
+          network: bitcoinjs.networks.bitcoin,
+        }).output,
+        value: 1,
+      },
+      {
+        script: bitcoinjs.payments.p2pkh({
+          network: bitcoinjs.networks.bitcoin,
+          address: TEST_BTC_ADDRESS2,
+        }).output,
+        value: 624999999,
+      },
+    ];
+    const pointer1 = 1;
+    const block = initCompleteBlockWithRuneEtching(
+      outputs,
+      pointer1,
+      undefined,
+      premineAmount,
+    );
+    program.setBlock(block.toHex());
+    await program.run("_start");
+
+    const resultAddress1 = await runesbyaddress(program, TEST_BTC_ADDRESS1);
+    expect(resultAddress1.balanceSheet[0].balance).equals(
+      premineAmount,
+      "address 1 should be mined premine amount",
+    );
+
+    const resultAddress2 = await runesbyaddress(program, TEST_BTC_ADDRESS2);
+    expect(resultAddress2.balanceSheet.length).equals(
+      0,
+      "address 2 should not have anything",
+    );
+  });
+});
 describe("metashrew-runes", () => {
   /*
   it("should check if duplicate keys are not being set", async () => {

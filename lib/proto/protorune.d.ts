@@ -306,6 +306,19 @@ export interface AddressReceivedRunesResponse {
      */
     receipts: AddressReceivedReceipt[];
 }
+/**
+ * @generated from protobuf message protorune.Payment
+ */
+export interface Payment {
+    /**
+     * @generated from protobuf field: uint32 height = 1;
+     */
+    height: number;
+    /**
+     * @generated from protobuf field: bytes recipient = 2;
+     */
+    recipient: Uint8Array;
+}
 declare class RuneId$Type extends MessageType<RuneId> {
     constructor();
     create(value?: PartialMessage<RuneId>): RuneId;
@@ -526,4 +539,14 @@ declare class AddressReceivedRunesResponse$Type extends MessageType<AddressRecei
  * @generated MessageType for protobuf message protorune.AddressReceivedRunesResponse
  */
 export declare const AddressReceivedRunesResponse: AddressReceivedRunesResponse$Type;
+declare class Payment$Type extends MessageType<Payment> {
+    constructor();
+    create(value?: PartialMessage<Payment>): Payment;
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Payment): Payment;
+    internalBinaryWrite(message: Payment, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message protorune.Payment
+ */
+export declare const Payment: Payment$Type;
 export {};

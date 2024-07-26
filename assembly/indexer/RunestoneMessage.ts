@@ -48,7 +48,11 @@ import {
 import { PROTOCOLS_TO_INDEX, PROTORUNE_TABLE } from "./tables/protorune";
 import { BalanceSheet } from "./BalanceSheet";
 import { RunesTransaction } from "./RunesTransaction";
-import { Input, OutPoint, Output } from "metashrew-as/assembly/blockdata/transaction";
+import {
+  Input,
+  OutPoint,
+  Output,
+} from "metashrew-as/assembly/blockdata/transaction";
 import { SUBSIDY_HALVING_INTERVAL } from "metashrew-as/assembly/utils";
 import { ProtoBurn } from "./ProtoBurn";
 import { ProtoStone } from "./ProtoStone";
@@ -58,8 +62,6 @@ import { protorune as protobuf } from "../proto/protorune";
 import { OUTPOINT_TO_OUTPUT } from "metashrew-spendables/assembly/tables";
 import { ProtoMessage } from "./protomessage";
 import { encodeHexFromBuffer } from "metashrew-as/assembly/utils/hex";
-
-
 
 export class RunestoneMessage {
   public fields: Map<u64, Array<u128>>;
@@ -279,7 +281,7 @@ export class RunestoneMessage {
     ETCHINGS.append(name);
     return true;
   }
-  
+
   saveReceivedRuneToReceipts(
     txid: ArrayBuffer,
     runeId: RuneId,
@@ -288,9 +290,11 @@ export class RunestoneMessage {
     senderAddr: ArrayBuffer,
   ): void {
     // get the address this rune is going to
-    const recvAddr = this._getAddressFromOutpoint(OutPoint.from(txid, edictOutput));
+    const recvAddr = this._getAddressFromOutpoint(
+      OutPoint.from(txid, edictOutput),
+    );
     if (recvAddr === null) {
-      console.log("ERROR: unable to get the receiver of the rune")
+      console.log("ERROR: unable to get the receiver of the rune");
     } else {
       const recvAddrStr = String.UTF8.decode(recvAddr);
       let receiptItemProto: protobuf.AddressReceivedReceipt;
@@ -307,13 +311,12 @@ export class RunestoneMessage {
       }
 
       const amountProto = new protobuf.AddressReceivedAmount();
-      amountProto.senderAddress = String.UTF8.decode(senderAddr)
+      amountProto.senderAddress = String.UTF8.decode(senderAddr);
 
       amountProto.amount = changetype<Array<u8>>(amount.toBytes(true));
 
       receiptItemProto.amounts.push(amountProto);
     }
-
   }
   processEdicts(
     balancesByOutput: Map<u32, BalanceSheet>,
@@ -341,11 +344,9 @@ export class RunestoneMessage {
     }
     return isCenotaph;
   }
-  
+
   _getAddressFromOutpoint(outpoint: OutPoint): ArrayBuffer | null {
-    const outputBuf = OUTPOINT_TO_OUTPUT.select(
-      outpoint.toArrayBuffer(),
-    ).get();
+    const outputBuf = OUTPOINT_TO_OUTPUT.select(outpoint.toArrayBuffer()).get();
     const output = new Output(Box.from(outputBuf));
     return output.intoAddress();
   }
@@ -492,5 +493,4 @@ export class RunestoneMessage {
     }
     return balancesByOutput;
   }
-
 }

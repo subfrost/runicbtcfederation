@@ -35,5 +35,4 @@ export class ProtoBurn {
       balanceSheet.saveIndex(i, this.table.OUTPOINT_TO_RUNES.select(outpoint));
     }
   }
-
 }
