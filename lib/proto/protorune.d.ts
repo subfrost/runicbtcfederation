@@ -319,6 +319,32 @@ export interface Payment {
      */
     recipient: Uint8Array;
 }
+/**
+ * @generated from protobuf message protorune.SenderAddress
+ */
+export interface SenderAddress {
+    /**
+     * @generated from protobuf field: bytes sender = 1;
+     */
+    sender: Uint8Array;
+}
+/**
+ * @generated from protobuf message protorune.PaymentResponse
+ */
+export interface PaymentResponse {
+    /**
+     * @generated from protobuf field: bytes recipient = 1;
+     */
+    recipient: Uint8Array;
+    /**
+     * @generated from protobuf field: repeated protorune.SenderAddress senders = 2;
+     */
+    senders: SenderAddress[];
+    /**
+     * @generated from protobuf field: uint64 amount = 3;
+     */
+    amount: bigint;
+}
 declare class RuneId$Type extends MessageType<RuneId> {
     constructor();
     create(value?: PartialMessage<RuneId>): RuneId;
@@ -549,4 +575,24 @@ declare class Payment$Type extends MessageType<Payment> {
  * @generated MessageType for protobuf message protorune.Payment
  */
 export declare const Payment: Payment$Type;
+declare class SenderAddress$Type extends MessageType<SenderAddress> {
+    constructor();
+    create(value?: PartialMessage<SenderAddress>): SenderAddress;
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: SenderAddress): SenderAddress;
+    internalBinaryWrite(message: SenderAddress, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message protorune.SenderAddress
+ */
+export declare const SenderAddress: SenderAddress$Type;
+declare class PaymentResponse$Type extends MessageType<PaymentResponse> {
+    constructor();
+    create(value?: PartialMessage<PaymentResponse>): PaymentResponse;
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: PaymentResponse): PaymentResponse;
+    internalBinaryWrite(message: PaymentResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter;
+}
+/**
+ * @generated MessageType for protobuf message protorune.PaymentResponse
+ */
+export declare const PaymentResponse: PaymentResponse$Type;
 export {};

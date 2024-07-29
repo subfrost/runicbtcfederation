@@ -18,6 +18,8 @@ import {
 import {
   buildCoinbaseToAddress,
   buildDefaultBlock,
+  buildTransaction,
+  
 } from "metashrew-runes/lib/tests/utils/block-helpers";
 import { DEBUG_WASM } from "./utils/general";
 
@@ -26,8 +28,7 @@ const completeBlock = (inputs:any, outputs: any, pointer: number, premineAmount?
 describe("payment indexing", () => {
   it("should index a transaction with multiple inputs from different addresses and send the sats to a single output", async () => {
     const program = buildProgram(DEBUG_WASM);
-    program.setBlockHeight(840000);
-    const premineAmount = 2100000005000000n;
+    program.setBlockHeight(853768);
     const outputs = [
       {
         script: bitcoinjs.payments.p2pkh({
@@ -44,12 +45,20 @@ describe("payment indexing", () => {
         value: 624999999,
       },
     ];
-    const block = initCompleteBlockWithRuneEtching(
-      outputs,
-      1,
-      undefined,
-      premineAmount,
-    );
+    const inputs = [
+      {
+        inputTxHash: Buffer.from('92574e7d0bbeb6dc02dbb4e783f799c6968ffff5417433fbab8b269a0af883c2', "hex"),
+        inputTxOutputIndex: 0,
+      },
+      {
+        inputTxHash: Buffer.from('92574e7d0bbeb6dc02dbb4e783f799c6968ffff5417433fbab8b269a0af883c2', "hex"),
+        inputTxOutputIndex: 1,
+      },
+    ];
+
+    const transaction = buildTransaction(inputs, outputs);
+    const block = buildDefaultBlock();
+    block.transactions?.push(transaction);
     program.setBlock(block.toHex());
     await program.run("_start");
 

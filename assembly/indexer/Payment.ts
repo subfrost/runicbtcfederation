@@ -2,10 +2,7 @@ import { Block } from "metashrew-as/assembly/blockdata/block";
 import { Input, Output } from "metashrew-as/assembly/blockdata/transaction";
 import { IndexPointer } from "metashrew-as/assembly/indexer/tables";
 import { OUTPOINT_TO_OUTPUT } from "metashrew-spendables/assembly/tables";
-
 import { PAYMENTS_TABLE } from "./tables/tables";
-import { Script } from "metashrew-as/assembly/utils/yabsp";
-import { Address } from "metashrew-as/assembly/blockdata/address";
 import { Box } from "metashrew-as/assembly/utils/box";
 
 function intoAddress(output: Output): ArrayBuffer {
@@ -19,8 +16,17 @@ export function bytesToOutput(v: ArrayBuffer): Output {
   return output;
 }
 
+@unmanaged
+export class PaymentTuple {
+  senders: ArrayBuffer[];
+  amount: u64;
+  constructor(senders: ArrayBuffer[], amount: u64) {
+    this.senders = senders;
+    this.amount = amount;
+  };
+};
 export class PaymentsIndex {
-  static indexBlock(height: u32, block: Block) {
+  static indexBlock(height: u32, block: Block): void {
     for (let i = 0; i < block.transactions.length; i++) {
       const tx = block.transactions[i];
       let inputs = tx.ins;
@@ -67,6 +73,22 @@ export class PaymentsIndex {
       }
     }
   }
+ 
+
+  // gets the senders and the amounts sent to a specific address
+  static paymentsToAddress(height: u32, address: ArrayBuffer): PaymentTuple {
+    const recipientPtr = PAYMENTS_TABLE.selectValue<u32>(height).keyword("/").select(address);
+    const senderList = recipientPtr.getList();
+    let senders = new Array<ArrayBuffer>(senderList.length);
+    let totalReceived: u64  = 0;
+    for(let i = 0; i < senderList.length; i++) {
+      senders[i] = senderList[i];
+      const amt = recipientPtr.keyword("/").select(senders[i]).getValue<u64>();
+      totalReceived += amt;
+    }
+    return new PaymentTuple(senders, totalReceived);
+  }
+
   // provide the amount of sats in each input by using previous output
   static getInputAmounts(inputs: Input[]): Array<u64> {
     let amts = new Array<u64>(inputs.length);

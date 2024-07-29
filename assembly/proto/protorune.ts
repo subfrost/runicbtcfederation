@@ -2832,4 +2832,184 @@ export namespace protorune {
       return buf;
     } // encode Payment
   } // Payment
+
+  export class SenderAddress {
+    public sender: Array<u8> = new Array<u8>();
+
+    // Decodes SenderAddress from an ArrayBuffer
+    static decode(buf: ArrayBuffer): SenderAddress {
+      return SenderAddress.decodeDataView(new DataView(buf));
+    }
+
+    // Decodes SenderAddress from a DataView
+    static decodeDataView(view: DataView): SenderAddress {
+      const decoder = new __proto.SafeDecoder(view);
+      const obj = new SenderAddress();
+
+      while (!decoder.eof()) {
+        const tag = decoder.tag();
+        const number = tag >>> 3;
+
+        switch (number) {
+          case 1: {
+            obj.sender = decoder.bytes();
+            break;
+          }
+
+          default:
+            decoder.skipType(tag & 7);
+            break;
+        }
+      }
+      if (decoder.invalid()) return changetype<SenderAddress>(0);
+      return obj;
+    } // decode SenderAddress
+
+    public size(): u32 {
+      let size: u32 = 0;
+
+      size +=
+        this.sender.length > 0
+          ? 1 + __proto.Sizer.varint64(this.sender.length) + this.sender.length
+          : 0;
+
+      return size;
+    }
+
+    // Encodes SenderAddress to the ArrayBuffer
+    encode(): ArrayBuffer {
+      return changetype<ArrayBuffer>(
+        StaticArray.fromArray<u8>(this.encodeU8Array())
+      );
+    }
+
+    // Encodes SenderAddress to the Array<u8>
+    encodeU8Array(
+      encoder: __proto.Encoder = new __proto.Encoder(new Array<u8>())
+    ): Array<u8> {
+      const buf = encoder.buf;
+
+      if (this.sender.length > 0) {
+        encoder.uint32(0xa);
+        encoder.uint32(this.sender.length);
+        encoder.bytes(this.sender);
+      }
+
+      return buf;
+    } // encode SenderAddress
+  } // SenderAddress
+
+  export class PaymentResponse {
+    public recipient: Array<u8> = new Array<u8>();
+    public senders: Array<SenderAddress> = new Array<SenderAddress>();
+    public amount: u64;
+
+    // Decodes PaymentResponse from an ArrayBuffer
+    static decode(buf: ArrayBuffer): PaymentResponse {
+      return PaymentResponse.decodeDataView(new DataView(buf));
+    }
+
+    // Decodes PaymentResponse from a DataView
+    static decodeDataView(view: DataView): PaymentResponse {
+      const decoder = new __proto.SafeDecoder(view);
+      const obj = new PaymentResponse();
+
+      while (!decoder.eof()) {
+        const tag = decoder.tag();
+        const number = tag >>> 3;
+
+        switch (number) {
+          case 1: {
+            obj.recipient = decoder.bytes();
+            break;
+          }
+          case 2: {
+            const length = decoder.uint32();
+            obj.senders.push(
+              SenderAddress.decodeDataView(
+                new DataView(
+                  decoder.view.buffer,
+                  decoder.pos + decoder.view.byteOffset,
+                  length
+                )
+              )
+            );
+            decoder.skip(length);
+
+            break;
+          }
+          case 3: {
+            obj.amount = decoder.uint64();
+            break;
+          }
+
+          default:
+            decoder.skipType(tag & 7);
+            break;
+        }
+      }
+      if (decoder.invalid()) return changetype<PaymentResponse>(0);
+      return obj;
+    } // decode PaymentResponse
+
+    public size(): u32 {
+      let size: u32 = 0;
+
+      size +=
+        this.recipient.length > 0
+          ? 1 +
+            __proto.Sizer.varint64(this.recipient.length) +
+            this.recipient.length
+          : 0;
+
+      for (let n: i32 = 0; n < this.senders.length; n++) {
+        const messageSize = this.senders[n].size();
+
+        if (messageSize > 0) {
+          size += 1 + __proto.Sizer.varint64(messageSize) + messageSize;
+        }
+      }
+
+      size += this.amount == 0 ? 0 : 1 + __proto.Sizer.uint64(this.amount);
+
+      return size;
+    }
+
+    // Encodes PaymentResponse to the ArrayBuffer
+    encode(): ArrayBuffer {
+      return changetype<ArrayBuffer>(
+        StaticArray.fromArray<u8>(this.encodeU8Array())
+      );
+    }
+
+    // Encodes PaymentResponse to the Array<u8>
+    encodeU8Array(
+      encoder: __proto.Encoder = new __proto.Encoder(new Array<u8>())
+    ): Array<u8> {
+      const buf = encoder.buf;
+
+      if (this.recipient.length > 0) {
+        encoder.uint32(0xa);
+        encoder.uint32(this.recipient.length);
+        encoder.bytes(this.recipient);
+      }
+
+      for (let n: i32 = 0; n < this.senders.length; n++) {
+        const messageSize = this.senders[n].size();
+
+        if (messageSize > 0) {
+          encoder.uint32(0x12);
+          encoder.uint32(messageSize);
+          this.senders[n].encodeU8Array(encoder);
+        }
+      }
+
+      if (this.amount != 0) {
+        encoder.uint32(0x18);
+        encoder.uint64(this.amount);
+      }
+
+      return buf;
+    } // encode PaymentResponse
+  } // PaymentResponse
 } // protorune
