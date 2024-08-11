@@ -5,12 +5,9 @@
     "asbuild:debug": "asc assembly/index.ts --target debug --enable threads --config asconfig.json",
     "asbuild:release": "asc assembly/index.ts --target release --config asconfig.json",
     "build:as": "npm-run-all asbuild:debug asbuild:release",
-    "build": "npm-run-all build:protoc build:as build:ts",
+    "build": "npm-run-all build:as build:ts",
     "build:debug:preloader": "npm run asbuild:preloader --sharedMemory",
     "build:ts": "tsc",
-    "build:protoc:as": "protoc --plugin=./node_modules/.bin/protoc-gen-as --as_out=assembly/proto --as_opt targetFileName=protorune.ts --proto_path=./ proto/protorune.proto",
-    "build:protoc:ts": "protoc --ts_out src.ts/proto --proto_path proto protorune.proto",
-    "build:protoc": "npm-run-all build:protoc:as build:protoc:ts",
     "prettier:assemblyscript": "prettier --write ./assembly/**/*.ts",
     "prettier:ts": "prettier --write ./src.ts/**/*.ts ./tests/**.ts ./tests/**/*.ts",
     "prettier": "npm-run-all prettier:assemblyscript prettier:ts",
@@ -29,6 +26,10 @@
     "clone": "^2.1.2",
     "ecpair": "^2.1.0",
     "lodash": "^4.17.21",
+    "metashrew-payments": "https://github.com/subfrost/metashrew-payments",
+    "metashrew-runes-payments": "https://github.com/subfrost/metashrew-runes-payments",
+    "protorune": "https://github.com/kungfuflex/protorune",
+    "quorumgenesisprotorune": "https://github.com/kungfuflex/quorumgenesisprotorune",
     "tiny-secp256k1": "^2.2.3",
     "yargs": "^17.7.2"
   },
@@ -61,6 +62,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
-  "name": "protorune",
-  "description": "protorune"
+  "name": "runicbtcfederation",
+  "description": "Coordination index for federation L0 stack"
 }

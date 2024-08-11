@@ -1,1 +1,1 @@
-export * from "./RunestoneField";
+export * from "./FederationField";

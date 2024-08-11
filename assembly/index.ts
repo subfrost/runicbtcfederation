@@ -1,30 +1,17 @@
-import { Box } from "metashrew-as/assembly/utils/box";
 import { _flush, input } from "metashrew-as/assembly/indexer/index";
 import { Block } from "metashrew-as/assembly/blockdata/block";
 import { parsePrimitive } from "metashrew-as/assembly/utils/utils";
-import { Index } from "./indexer";
-import { GENESIS } from "./indexer/constants";
-import { Index as SpendablesIndex } from "metashrew-spendables/assembly/indexer";
-
-export function trap(): void {
-  unreachable();
-}
+import { SpendablesIndex } from "metashrew-spendables/assembly/indexer";
+import { FederationIndex } from "./indexer/FederationIndex";
+export * from "protorune/assembly/view";
+import { Box } from "metashrew-as/assembly/utils/box";
+// export * from "./view";
 
 export function _start(): void {
-  const data = input();
-  const box = Box.from(data);
-  const height = parsePrimitive<u32>(box);
-  if (height < GENESIS - 6) {
-    _flush();
-    return;
-  }
-  const block = new Block(box);
-  if (height >= GENESIS) {
-    SpendablesIndex.indexBlock(height, block);
-  }
-  Index.indexBlock(height, block);
+  const data = Box.from(input());
+  const height = parsePrimitive<u32>(data);
+  const block = new Block(data);
+  new SpendablesIndex().indexBlock(height, block);
+  new FederationIndex().indexBlock(height, block);
   _flush();
 }
-
-export * from "./tests";
-export * from "./view";
