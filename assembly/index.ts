@@ -1,7 +1,7 @@
 import { _flush, input } from "metashrew-as/assembly/indexer/index";
 import { Block } from "metashrew-as/assembly/blockdata/block";
 import { parsePrimitive } from "metashrew-as/assembly/utils/utils";
-import { PaymentsIndex } from "metashrew-payments/assembly/indexer";
+import { PaymentsIndex } from "metashrew-payments/assembly/indexer/Payment";
 import { FederationIndex } from "./indexer/FederationIndex";
 export * from "protorune/assembly/view";
 import { Box } from "metashrew-as/assembly/utils/box";

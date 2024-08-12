@@ -16,12 +16,30 @@ import {
 import { findInscription, QuorumMessageContext } from "quorumgenesisprotorune/assembly/indexer/QuorumMessageContext";
 import { IncomingRune } from "protorune/assembly/indexer/protomessage/IncomingRune";
 import { RunestoneMessage } from "metashrew-runes/assembly/indexer/RunestoneMessage";
-import { QuorumField } from "quorumgenesisprotorune/assembly/indexer/fields/QuorumField";
+import { FederationField } from "./fields/FederationField";
 import { Proposal } from "quorumgenesisprotorune/assembly/indexer/Proposal";
 import { Box } from "metashrew-as/assembly/utils/box";
 import { u128 } from "as-bignum/assembly";
 import { console } from "metashrew-as/assembly/utils";
 
+function isFederationProtorune(rune: IncomingRune): boolean {
+  if (
+    rune.runeId.block === u128.from(FEDERATION_HEIGHT) &&
+    rune.runeId.tx === u128.from(FEDERATION_TXINDEX)
+  )
+    return true;
+  return false;
+}
+
+function findIncomingFederationProtorunes(
+  runes: Array<IncomingRune>,
+): IncomingRune {
+  for (let i = 0; i < runes.length; i++) {
+    const rune = runes[i];
+    if (isFederationProtorune(rune)) return rune;
+  }
+  return changetype<IncomingRune>(0);
+}
 export class FederationMessageContext extends QuorumMessageContext {
   static PROPOSAL_PREFIX: ArrayBuffer = decodeHex(
     "46454445524154494f4e2050726f706f73616c3a0a"
@@ -54,7 +72,7 @@ export class FederationMessageContext extends QuorumMessageContext {
   handle(): boolean {
     const action = RunestoneMessage.parse(this.calldata);
     if (action.fields.has(FederationField.PROPOSAL)) {
-      const incomingGenesis: IncomingRune = findIncomingGenesisProtorune(
+      const incomingGenesis: IncomingRune = findIncomingFederationProtorunes(
         this.runes,
       );
       if (changetype<usize>(incomingGenesis) === 0) return false;
