@@ -34,15 +34,57 @@ View functions support querying payouts of dividends by block, as well as net tr
 
 ## Protocol Messages
 
+The FederationIndex is protorunes-compatible and thus inherits the same Protostone data structure as a primitive, the bytearray packed into field 16383 (Protocol) of a standard Runestone message. (See [https://github.com/kungfuflex/protorune/wiki/Protocol-Messages#protostone](https://github.com/kungfuflex/protorune/wiki/Protocol-Messages#protostone) for a complete description)
+
+The Protostone is a standard structure in protorunes subprotocols and can be represented as follows:
+
+
+```rs
+enum ProtoTag {
+  Body = 0,
+  Message = 81,
+  Burn = 83,
+  Pointer = 91,
+  Refund = 93,
+  Cenotaph = 126,
+  Nop = 127
+}
+```
+
+```rs
+struct Protostone {
+  edicts: Vec<Edict>,
+  pointer: Option<u32>,
+  refund_pointer: Option<u32>,
+  burn: Option<u128>,
+  message: Option<Vec<u8>>
+}
+```
+
+For FederationIndex, The `message` field is encoded as an additional layer of the nested leb128[] and parsed similar to a Protostone, using the following fields inherited from QUORUM•GENESIS•PROTORUNE, but extended:
+
+
 ```js
 class QuorumField {
   static PROPOSAL: u64 = 95;
-  static VOTE: u64 = 97
+  static VOTE: u64 = 97;
 }
 class FederationField extends QuorumField {
-  static CLAIM: u64 = 99
+  static CLAIM: u64 = 99;
 }
 ```
+
+```rs
+struct FederationStone {
+  [Proposal (95)]: ProposalPayload;
+  [Vote (97)]: u32;
+  [Claim (99)]: bool;
+}
+```
+
+Refer to [https://github.com/kungfuflex/quorumgenesisprotorune](https://github.com/kungfuflex/quorumgenesisprotorune) for descriptions of indexer behavior surrounding Proposal and Vote protomessages. Governance within SUBROST provides mechanics where federation stakeholders can signal the signing group to modify behavior. This is interpreted with modifications to this repository, in some cases, but otherwise in the signer itself.
+
+The Claim protomessage is simply a flag supplied which triggers the indexer to schedule SUBFROST to pay out unpaid dividends for all unique ranges of FEDERATION protocol runes paid as inputs to the transaction. Unlike governance protomessages, the claim protomessage has a very deterministic effect on active SUBFROST nodes and produces its effect with the next block. As a result of the protomessage, SUBFROST nodes compute a quantity of protocol fees owed to the assets, and protocol runes are refunded to the `refund_pointer`. There is no output transferred to `pointer`, but SUBFROST will parse the output script and model an output script with the same recipient and structure for the output it includes in its transaction for that block. In this way, the Claim protomessage and its pointer is followed by SUBFROST as it pays out protocol fees as BTC currency.
 
 ## Author
 
