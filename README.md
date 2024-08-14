@@ -1,10 +1,15 @@
 # runicbtcfederation
 
+
 Repository for the core FederationIndex class, built for the metashrew indexer runtime. Indexer sources are aggregated here to encompass the full scope of L0 support covered by the canonical SUBFROST signing group.
 
 The FederationIndex class bundles supported indexers to perform operations related to RUNIC•BTC•FEDERATION and any associated exchange logic for RUNIC•BTC•NOTE, on any subprotocol honored by SUBFROST.
 
 This README.md defines structures used by the runtime, which include on-chain governance and dividends.
+
+### Note: these rune names will change!
+
+The names RUNIC•BTC•FEDERATION and RUNIC•BTC•NOTE will not be the final names for etchings when SUBFROST begins running on mainneg. They are placeholders for names which are still TBD! Don't get scammed.
 
 ## Purpose
 
